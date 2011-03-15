@@ -1,13 +1,11 @@
 name: Trivia
 main: nl.blaatz0r.Trivia.Trivia
-description: Trivia is a quiz game that is played in the minecraft chatbox.
-version: 1.5
-
+description: Qukkiz is a quiz game that is played in the minecraft chatbox.
+version: 1.6
+authors:
+    - 'xZise'
+    - 'blaatz0r'
 commands:
-    trivia:
-        description: Trivia related commands
-        usage: /<command> help
-
     next:
         description: Skips to the next Trivia question
         usage: /<command>
@@ -19,3 +17,8 @@ commands:
     hint:
         description: Calls the next hint for the current Trivia question, if possible
         usage: /<command>
+    
+    qukkiz:
+        description: Handle Qukkiz.
+        usage: /<command> help - Show the help of qukkiz-commands.
+        aliases: [trivia]
