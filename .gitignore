@@ -5,3 +5,6 @@ bin/
 .classpath
 .project
 .settings/
+
+#maven
+target/
