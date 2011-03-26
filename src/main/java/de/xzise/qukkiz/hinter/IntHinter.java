@@ -4,7 +4,7 @@ import java.util.Random;
 
 import de.xzise.qukkiz.questions.QuestionInterface;
 
-public class IntHinter implements Hinter<IntHinterSettings> {
+public class IntHinter extends FirstComeHinter<IntHinterSettings> {
 
     private final int ranges[];
     private final int value;
@@ -14,7 +14,7 @@ public class IntHinter implements Hinter<IntHinterSettings> {
     private IntHinterSettings settings;
     
     public IntHinter(int value, IntHinterSettings settings, QuestionInterface question) {
-        this.setSettings(settings);
+        super(settings);
         this.value = value;
         this.question = question;
         this.hintNumber = 0;
@@ -49,11 +49,6 @@ public class IntHinter implements Hinter<IntHinterSettings> {
     @Override
     public QuestionInterface getQuestion() {
         return this.question;
-    }
-
-    @Override
-    public void setSettings(IntHinterSettings settings) {
-        this.settings = settings;
     }
 
 }

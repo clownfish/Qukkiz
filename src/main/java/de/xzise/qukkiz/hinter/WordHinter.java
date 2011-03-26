@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import de.xzise.qukkiz.questions.QuestionInterface;
 
-public class WordHinter implements Hinter<WordHinterSettings> {
+public class WordHinter extends FirstComeHinter<WordHinterSettings> {
     
     private static final Pattern REPLACE_PATTERN = Pattern.compile("[a-zA-Z0-9]");
 
@@ -15,7 +15,7 @@ public class WordHinter implements Hinter<WordHinterSettings> {
     private final QuestionInterface question;
     
     public WordHinter(String hintResult, WordHinterSettings settings, QuestionInterface question) {
-        this.setSettings(settings);
+        super(settings);
         this.hintResult = hintResult;
         this.hint = REPLACE_PATTERN.matcher(this.hintResult).replaceAll("*").toCharArray();
         this.question = question;
@@ -59,11 +59,6 @@ public class WordHinter implements Hinter<WordHinterSettings> {
     @Override
     public QuestionInterface getQuestion() {
         return this.question;
-    }
-
-    @Override
-    public void setSettings(WordHinterSettings settings) {
-        this.settings = settings;
     }
 
 }

@@ -37,6 +37,7 @@ import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.QukkizUsers;
 import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 import de.xzise.qukkiz.commands.CommandMap;
+import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.hinter.HinterSettings;
 import de.xzise.qukkiz.questions.EstimateQuestion;
@@ -63,19 +64,6 @@ import de.xzise.qukkiz.reward.RewardSettings;
 public class Trivia extends JavaPlugin {
 
     public static final String[] grats = { "Nice! ", "Congratulations! ", "Woop! ", "Bingo! ", "Zing! ", "Huzzah! ", "Grats! ", "Who's the man?! ", "YEAHH! ", "Well done! " };
-    
-    private final class Answer {
-        
-        public final long time;
-        public final String answer;
-        public final Player player;
-        
-        public Answer(long time, String answer, Player player) {
-            this.time = time;
-            this.answer = answer;
-            this.player = player;
-        }        
-    }
     
     public String name;
     public String version;
@@ -168,6 +156,7 @@ public class Trivia extends JavaPlugin {
 
         // Register our events
         PluginManager pm = getServer().getPluginManager();
+        pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLAYER_CHAT, playerListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Low, this);
@@ -256,7 +245,6 @@ public class Trivia extends JavaPlugin {
      */
     public void nextQuestion() {
         this.stopQuestion();
-        readQuestion();
         this.scheduleTask(new TimerTask() {
 
             @Override
@@ -281,6 +269,7 @@ public class Trivia extends JavaPlugin {
     private void startQuestion() {
         this.canAnswer = true;
         this.startTime = new Date().getTime();
+        this.readQuestion();
         this.sendQuestion();
         this.startHintTimer();
     }
@@ -302,14 +291,11 @@ public class Trivia extends JavaPlugin {
      */
     public void updateHint() {
         if (this.hints == this.settings.hintCount) {
-            switch (this.hinter.getQuestion().getAnswerType()) {
-            case BEST_GUESS :
-                this.testBestGuessAnswers();
-                break;
-            case FIRST_COME :
-            default :
+            Answer a = this.hinter.getBestAnswer();
+            if (a == null) {
                 this.noAnswer();
-                break;
+            } else {
+                this.proposeWinner(a);
             }
         } else {
             if (this.task != null) {
@@ -336,11 +322,16 @@ public class Trivia extends JavaPlugin {
             sender.sendMessage(ChatColor.RED + "No files were loaded!");
             Trivia.logger.severe("No files are added to load.");
         } else {
-            this.users.sendMessage("Stop question to load questions.");
+            if (this.triviaRunning) {
+                this.users.sendMessage("Stop question to load questions.");
+            }
             this.stopQuestion();
             this.questions.clear();
             this.loadQuestions(list, sender);
             sender.sendMessage("Loaded questions.");
+            if (this.triviaRunning) {
+                this.nextQuestion();
+            }
         }
     }
 
@@ -551,41 +542,19 @@ public class Trivia extends JavaPlugin {
 
     public boolean answerQuestion(String answer, Player player) {
         if (this.canAnswer) {
-            switch (this.hinter.getQuestion().getAnswerType()) {
-            case BEST_GUESS :
-                this.answers.put(player, new Answer(new Date().getTime() - this.startTime, answer, player));
-                if (this.answers.size() == this.users.getAnsweringSize()) {
-                    this.testBestGuessAnswers();
-                }
-                break;
-            case FIRST_COME :
-                if (this.hinter.getQuestion().testAnswer(answer)) {
-                    this.proposeWinner(new Answer(new Date().getTime() - this.startTime, answer, player));
-                    return true;
+            if (this.hinter.putAnswer(new Answer(new Date().getTime() - this.startTime, answer, player))) {
+                Answer a = this.hinter.getBestAnswer();
+                if (a != null) {
+                    this.noAnswer();
                 } else {
-                    return false;
+                    this.proposeWinner(a);
                 }
-            default :
-                logger.warning("Unhandled answer type!");
-                break;
+            } else {
+                return false;
             }
             return true;            
         } else {
             return false;
-        }
-    }
-    
-    private void testBestGuessAnswers() {
-        Answer bestAnswer = null;
-        for (Answer answer : this.answers.values()) {
-            if (this.hinter.getQuestion().testAnswer(answer.answer) && (bestAnswer == null || bestAnswer.time > answer.time)) {
-                bestAnswer = answer;
-            }
-        }
-        if (bestAnswer == null) {
-            this.noAnswer();
-        } else {
-            this.proposeWinner(bestAnswer);
         }
     }
     

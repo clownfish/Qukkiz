@@ -10,7 +10,7 @@ public class EstimateQuestion extends Question {
     private final int answer;
     
     public EstimateQuestion(String question, QukkizSettings settings, int answer) {
-        super(question, settings, AnswerTypes.FIRST_COME);
+        super(question, settings);
         this.answer = answer;
     }
 

@@ -5,7 +5,7 @@ import java.util.Random;
 
 import de.xzise.qukkiz.questions.QuestionInterface;
 
-public class ChoiceHinter extends DefaultHinter<ChoiceHinterSettings> {
+public class ChoiceHinter extends BestGuessHinter<ChoiceHinterSettings> {
 
     private final String[] answers;
     private final int[] answerIdx;
