@@ -11,7 +11,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -61,7 +63,20 @@ import de.xzise.qukkiz.reward.RewardSettings;
 public class Trivia extends JavaPlugin {
 
     public static final String[] grats = { "Nice! ", "Congratulations! ", "Woop! ", "Bingo! ", "Zing! ", "Huzzah! ", "Grats! ", "Who's the man?! ", "YEAHH! ", "Well done! " };
-
+    
+    private final class Answer {
+        
+        public final long time;
+        public final String answer;
+        public final Player player;
+        
+        public Answer(long time, String answer, Player player) {
+            this.time = time;
+            this.answer = answer;
+            this.player = player;
+        }        
+    }
+    
     public String name;
     public String version;
 
@@ -82,6 +97,8 @@ public class Trivia extends JavaPlugin {
     private Timer timer;
     private TimerTask task;
 
+    private Map<Player, Answer> answers = new HashMap<Player, Answer>();
+    
     private CoinsReward coinReward;
 
     public static PermissionWrapper wrapper = new PermissionWrapper();
@@ -257,6 +274,7 @@ public class Trivia extends JavaPlugin {
         if (this.voted != null) {
             this.voted.clear();
         }
+        this.answers.clear();
         this.hints = 0;
     }
 
@@ -284,9 +302,15 @@ public class Trivia extends JavaPlugin {
      */
     public void updateHint() {
         if (this.hints == this.settings.hintCount) {
-            this.users.sendMessage(ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right. The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
-            this.users.sendMessage("Next question in " + ChatColor.GREEN + this.settings.questionsDelay + ChatColor.WHITE + " seconds.");
-            this.nextQuestion();
+            switch (this.hinter.getQuestion().getAnswerType()) {
+            case BEST_GUESS :
+                this.testBestGuessAnswers();
+                break;
+            case FIRST_COME :
+            default :
+                this.noAnswer();
+                break;
+            }
         } else {
             if (this.task != null) {
                 this.task.cancel();
@@ -298,6 +322,12 @@ public class Trivia extends JavaPlugin {
 
             this.startHintTimer();
         }
+    }
+    
+    private void noAnswer() {
+        this.users.sendMessage(ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right. The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
+        this.users.sendMessage("Next question in " + ChatColor.GREEN + this.settings.questionsDelay + ChatColor.WHITE + " seconds.");
+        this.nextQuestion();
     }
 
     public void loadQuestions(CommandSender sender) {
@@ -520,21 +550,55 @@ public class Trivia extends JavaPlugin {
     }
 
     public boolean answerQuestion(String answer, Player player) {
-        if (this.canAnswer && this.hinter.getQuestion().testAnswer(answer)) {
-            this.canAnswer = false;
-            long endTime = (new Date().getTime()) - this.startTime;
-
-            double time = Math.round(endTime / 10) / 100;
-
-            this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
-            this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
-
-            this.reward(player);
-            this.nextQuestion();
-            return true;
+        if (this.canAnswer) {
+            switch (this.hinter.getQuestion().getAnswerType()) {
+            case BEST_GUESS :
+                this.answers.put(player, new Answer(new Date().getTime() - this.startTime, answer, player));
+                if (this.answers.size() == this.users.getAnsweringSize()) {
+                    this.testBestGuessAnswers();
+                }
+                break;
+            case FIRST_COME :
+                if (this.hinter.getQuestion().testAnswer(answer)) {
+                    this.proposeWinner(new Answer(new Date().getTime() - this.startTime, answer, player));
+                    return true;
+                } else {
+                    return false;
+                }
+            default :
+                logger.warning("Unhandled answer type!");
+                break;
+            }
+            return true;            
         } else {
             return false;
         }
+    }
+    
+    private void testBestGuessAnswers() {
+        Answer bestAnswer = null;
+        for (Answer answer : this.answers.values()) {
+            if (this.hinter.getQuestion().testAnswer(answer.answer) && (bestAnswer == null || bestAnswer.time > answer.time)) {
+                bestAnswer = answer;
+            }
+        }
+        if (bestAnswer == null) {
+            this.noAnswer();
+        } else {
+            this.proposeWinner(bestAnswer);
+        }
+    }
+    
+    private void proposeWinner(Answer answer) {
+        this.canAnswer = false;
+
+        double time = Math.round(answer.time / 10) / 100;
+
+        this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
+        this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
+
+        this.reward(answer.player);
+        this.nextQuestion();
     }
 
     public void reward(Player p) {

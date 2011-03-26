@@ -12,7 +12,7 @@ public class MultipleChoiceQuestion extends Question {
     private final String[] answers;
 
     public MultipleChoiceQuestion(String question, QukkizSettings settings, String... answers) {
-        super(question, settings);
+        super(question, settings, AnswerTypes.BEST_GUESS);
         this.answers = answers;
     }
 

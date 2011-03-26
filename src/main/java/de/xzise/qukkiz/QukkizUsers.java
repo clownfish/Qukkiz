@@ -117,4 +117,14 @@ public class QukkizUsers {
         }
     }
 
+    public int getAnsweringSize() {
+        int count = 0;
+        for (CommandSender sender : this.active) {
+            if (sender instanceof Player) {
+                count++;
+            }
+        }
+        return count;
+    }
+
 }

@@ -12,4 +12,6 @@ public interface Hinter<Settings extends HinterSettings> {
     
     void setSettings(Settings settings);
     
+//    boolean putAnswer(String answer, Player player);
+    
 }

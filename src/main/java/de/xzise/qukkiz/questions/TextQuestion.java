@@ -10,7 +10,7 @@ public class TextQuestion extends Question {
     public final String[] answers;
     
     public TextQuestion(String question, QukkizSettings settings, String... answers) {
-        super(question, settings);
+        super(question, settings, AnswerTypes.FIRST_COME);
         this.answers = answers;
     }
     

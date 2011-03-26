@@ -58,5 +58,10 @@ public class ScrambleQuestion implements QuestionInterface {
     public String getQuestion() {
         return this.question;
     }
+
+    @Override
+    public AnswerTypes getAnswerType() {
+        return AnswerTypes.FIRST_COME;
+    }
     
 }
