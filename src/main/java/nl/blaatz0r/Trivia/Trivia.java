@@ -151,6 +151,7 @@ public class Trivia extends JavaPlugin {
 
         // Register our events
         PluginManager pm = getServer().getPluginManager();
+        pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLAYER_CHAT, playerListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Low, this);
@@ -239,7 +240,6 @@ public class Trivia extends JavaPlugin {
      */
     public void nextQuestion() {
         this.stopQuestion();
-        readQuestion();
         this.scheduleTask(new TimerTask() {
 
             @Override
@@ -263,6 +263,7 @@ public class Trivia extends JavaPlugin {
     private void startQuestion() {
         this.canAnswer = true;
         this.startTime = new Date().getTime();
+        this.readQuestion();
         this.sendQuestion();
         this.startHintTimer();
     }
@@ -306,11 +307,16 @@ public class Trivia extends JavaPlugin {
             sender.sendMessage(ChatColor.RED + "No files were loaded!");
             Trivia.logger.severe("No files are added to load.");
         } else {
-            this.users.sendMessage("Stop question to load questions.");
+            if (this.triviaRunning) {
+                this.users.sendMessage("Stop question to load questions.");
+            }
             this.stopQuestion();
             this.questions.clear();
             this.loadQuestions(list, sender);
             sender.sendMessage("Loaded questions.");
+            if (this.triviaRunning) {
+                this.nextQuestion();
+            }
         }
     }
 

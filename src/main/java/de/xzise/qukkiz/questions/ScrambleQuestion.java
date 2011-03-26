@@ -11,9 +11,11 @@ import de.xzise.qukkiz.hinter.WordHinterSettings;
 
 public class ScrambleQuestion implements QuestionInterface {
 
+    private final static String QUESTION = "Unscramble this word: " + ChatColor.GREEN;
+    
     public final String word;
     private final QukkizSettings settings;
-    public String question;
+    public String scrambled;
     
     public ScrambleQuestion(String word, QukkizSettings settings) {
         this.settings = settings;
@@ -50,13 +52,16 @@ public class ScrambleQuestion implements QuestionInterface {
 
     @Override
     public Hinter<WordHinterSettings> createHinter() {
-        this.question = "Unscramble this word: " + ChatColor.GREEN + scramble(word);
+        this.scrambled = scramble(word);
         return new WordHinter(this.word, this.settings.wordHinter, this);
     }
 
     @Override
     public String getQuestion() {
-        return this.question;
+        if (this.scrambled == null) {
+            this.scrambled = scramble(word);
+        }
+        return QUESTION + this.scrambled;
     }
     
 }
