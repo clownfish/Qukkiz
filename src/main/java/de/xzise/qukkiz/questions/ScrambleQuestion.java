@@ -2,17 +2,21 @@ package de.xzise.qukkiz.questions;
 
 import java.util.Random;
 
+import org.bukkit.ChatColor;
+
 import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.hinter.WordHinter;
 import de.xzise.qukkiz.hinter.WordHinterSettings;
 
-public class ScrambleQuestion extends Question {
+public class ScrambleQuestion implements QuestionInterface {
 
     public final String word;
+    private final QukkizSettings settings;
+    public String question;
     
     public ScrambleQuestion(String word, QukkizSettings settings) {
-        super("Unscramble this word: " + scramble(word), settings);
+        this.settings = settings;
         this.word = word;
     }
 
@@ -46,7 +50,13 @@ public class ScrambleQuestion extends Question {
 
     @Override
     public Hinter<WordHinterSettings> createHinter() {
+        this.question = "Unscramble this word: " + ChatColor.GREEN + scramble(word);
         return new WordHinter(this.word, this.settings.wordHinter, this);
+    }
+
+    @Override
+    public String getQuestion() {
+        return this.question;
     }
     
 }

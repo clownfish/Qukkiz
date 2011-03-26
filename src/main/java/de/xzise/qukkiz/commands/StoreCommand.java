@@ -1,19 +1,20 @@
 package de.xzise.qukkiz.commands;
 
+import nl.blaatz0r.Trivia.Trivia;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.xzise.commands.CommonHelpableSubCommand;
-import de.xzise.qukkiz.QukkizUsers;
 
 public class StoreCommand extends CommonHelpableSubCommand {
 
-    private final QukkizUsers users;
+    private final Trivia plugin;
     
-    public StoreCommand(QukkizUsers users) {
+    public StoreCommand(Trivia plugin) {
         super("store");
-        this.users = users;
+        this.plugin = plugin;
     }
     
     @Override
@@ -35,7 +36,7 @@ public class StoreCommand extends CommonHelpableSubCommand {
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
             if (sender instanceof Player) {
-                if (this.users.toogleStorage((Player) sender)) {
+                if (this.plugin.getUsers().toogleStorage((Player) sender)) {
                     sender.sendMessage("Qukkiz stored " + ChatColor.GREEN + ((Player) sender).getName() + ChatColor.WHITE + ".");
                 } else {
                     sender.sendMessage("Qukkiz removed " + ChatColor.GREEN + ((Player) sender).getName() + ChatColor.WHITE + ".");

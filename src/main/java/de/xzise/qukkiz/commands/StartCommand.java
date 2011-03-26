@@ -37,7 +37,7 @@ public class StartCommand extends CommonHelpableSubCommand {
         if (parameters.length == 1) {
             if (Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_START)) {
                 if (!this.plugin.triviaRunning()) {
-                    this.plugin.startTrivia(true);
+                    this.plugin.startTrivia();
                 } else {
                     sender.sendMessage(ChatColor.RED + "Qukkiz is already running.");
                 }

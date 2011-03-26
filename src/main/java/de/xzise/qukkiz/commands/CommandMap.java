@@ -38,7 +38,7 @@ public class CommandMap extends CommonCommandMap {
         commands.add(new RankCommand(plugin));
         commands.add(new LeaderCommand(plugin));
         commands.add(new VoteNextCommand(plugin));
-        commands.add(new StoreCommand(plugin.getUsers()));
+        commands.add(new StoreCommand(plugin));
         commands.add(new HintCommand(plugin));
         commands.add(new LoadCommand(plugin));
         commands.add(new NextCommand(plugin));

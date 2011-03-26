@@ -39,7 +39,6 @@ import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.hinter.HinterSettings;
 import de.xzise.qukkiz.questions.EstimateQuestion;
 import de.xzise.qukkiz.questions.MultipleChoiceQuestion;
-import de.xzise.qukkiz.questions.Question;
 import de.xzise.qukkiz.questions.QuestionInterface;
 import de.xzise.qukkiz.questions.ScrambleQuestion;
 import de.xzise.qukkiz.questions.TextQuestion;
@@ -62,8 +61,7 @@ import de.xzise.qukkiz.reward.RewardSettings;
 public class Trivia extends JavaPlugin {
 
     public static final String[] grats = { "Nice! ", "Congratulations! ", "Woop! ", "Bingo! ", "Zing! ", "Huzzah! ", "Grats! ", "Who's the man?! ", "YEAHH! ", "Well done! " };
-    
-    
+
     public String name;
     public String version;
 
@@ -71,7 +69,7 @@ public class Trivia extends JavaPlugin {
     public long startTime;
     public int hints;
     public boolean canAnswer;
-    public List<Player> voted;
+    public List<CommandSender> voted;
     private boolean triviaRunning;
 
     // Qukkiz additions
@@ -82,31 +80,31 @@ public class Trivia extends JavaPlugin {
     private List<Reward<? extends RewardSettings>> rewards;
     private QukkizSettings settings;
     private Timer timer;
-    
+    private TimerTask task;
+
     private CoinsReward coinReward;
-    
+
     public static PermissionWrapper wrapper = new PermissionWrapper();
     public static XLogger logger;
 
     // DEFAULT PLUGIN FUNCTIONS
 
     public void onEnable() {
-//        logger = new XLogger(this); 
-        logger = new XLogger("Minecraft", "Trivia");
+        try {
+            logger = new XLogger(this);
+        } catch (NoSuchMethodError nsme) {
+            logger = new XLogger("Minecraft", "Trivia");
+            logger.warning("Using old constructor!");
+        }
 
         this.getDataFolder().mkdir();
-        
+
         this.settings = new QukkizSettings(this.getDataFolder());
         this.name = this.getDescription().getName();
         this.version = this.getDescription().getVersion();
         this.commands = new CommandMap(this);
         this.users = new QukkizUsers();
         this.users.readFile(new File(this.getDataFolder(), "stored-users.txt"));
-
-        // this.setupIconomy();
-
-//        File questionsDir = new File(getDataFolder(), TriviaSettings.questionsDir);
-//        questionsDir.mkdir();
 
         this.db = new Database();
         db.connect(this.settings.database);
@@ -115,7 +113,7 @@ public class Trivia extends JavaPlugin {
         // Read trivia question files (only once)
         this.questions = new ArrayList<QuestionInterface>();
         this.loadQuestions();
-        
+
         // React on plugin enable/disable
         ServerListener serverListener = new ServerListener() {
             @Override
@@ -140,15 +138,15 @@ public class Trivia extends JavaPlugin {
                         Trivia.this.coinReward.setEconomy(null);
                     }
                 }
-            } 
+            }
         };
-        
+
         // Test all plugins once!
         Trivia.wrapper.init(this.getServer().getPluginManager().getPlugin("Permissions"));
         if (this.coinReward != null) {
             this.coinReward.setEconomy(this.getServer().getPluginManager().getPlugin("iConomy"));
         }
-        
+
         PlayerListener playerListener = new TriviaPlayerListener(this, this.users);
 
         // Register our events
@@ -158,40 +156,35 @@ public class Trivia extends JavaPlugin {
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Low, this);
 
-        this.startTrivia(false);
+        this.startTrivia();
         logger.info(name + " " + version + " enabled");
     }
-    
+
     public QukkizUsers getUsers() {
         return this.users;
     }
-    
+
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         return this.commands.executeCommand(sender, args);
     }
 
-    public void startTrivia(boolean verbose) {
+    public void startTrivia() {
+        this.settings.loadSettings(this.getDataFolder());
+        this.loadQuestions();
+
         if (questions.size() != 0) {
             // Start a new timer
             if (this.timer != null) {
                 this.timer.cancel();
             }
             this.timer = new Timer();
-            
-            if (verbose) {
-                Trivia.logger.info("Trivia has started!");
 
-                this.users.sendMessage(ChatColor.GREEN + "Trivia has started! \\o/");
-            }
-            
-            this.settings.loadSettings(this.getDataFolder());
-            
-            voted = new ArrayList<Player>();
+            voted = new ArrayList<CommandSender>();
             startTime = new Date().getTime();
             hints = 0;
             canAnswer = true;
             triviaRunning = true;
-            
+
             this.rewards = new ArrayList<Reward<? extends RewardSettings>>();
             if (this.settings.pointsReward != null) {
                 this.rewards.add(new PointsReward(this.settings.pointsReward, this));
@@ -202,12 +195,14 @@ public class Trivia extends JavaPlugin {
             if (this.settings.coinsReward != null) {
                 this.rewards.add(new CoinsReward(this.settings.coinsReward));
             }
-            
+
+            Trivia.logger.info("Trivia has started!");
+            this.users.sendMessage(ChatColor.GREEN + "Trivia has started! \\o/");
+
             nextQuestion();
         } else {
             Trivia.logger.warning("No questions were loaded!");
             Trivia.logger.warning("Add some files to the qukkiz.yml");
-//            Trivia.logger.warning("Add some files to the /plugins/Trivia/" + TriviaSettings.questionsDir + "/ directory and use /load <filename>, then use /trivia start");
             this.users.sendMessage(ChatColor.RED + "Trivia cannot start because no questions were loaded.");
         }
     }
@@ -221,47 +216,60 @@ public class Trivia extends JavaPlugin {
     public void stopTrivia() {
         this.users.sendMessage(ChatColor.RED + "Trivia has stopped. :(");
 
-        voted = new ArrayList<Player>();
+        voted = new ArrayList<CommandSender>();
         hints = 0;
         canAnswer = false;
         triviaRunning = false;
 
-        this.timer.cancel();
-
+        if (this.timer != null) {
+            this.timer.cancel();
+        }
     }
 
     // TRIVIA FUNCTIONS
+
+    private void scheduleTask(TimerTask task, int delay) {
+        this.task = task;
+        this.timer.schedule(task, delay);
+    }
 
     /**
      * Method to select and start the next question. Resets the number of hints,
      * reads a question, creates a hint and enables answering.
      */
     public void nextQuestion() {
-        this.canAnswer = false;
-        this.voted.clear();
-        this.hints = 0;
+        this.stopQuestion();
         readQuestion();
-        this.timer.schedule(new TimerTask() {
-            
+        this.scheduleTask(new TimerTask() {
+
             @Override
             public void run() {
                 Trivia.this.startQuestion();
             }
         }, this.settings.questionsDelay * 1000);
     }
-    
+
+    public void stopQuestion() {
+        if (this.task != null) {
+            this.task.cancel();
+        }
+        this.canAnswer = false;
+        if (this.voted != null) {
+            this.voted.clear();
+        }
+        this.hints = 0;
+    }
+
     private void startQuestion() {
         this.canAnswer = true;
         this.startTime = new Date().getTime();
-        for (CommandSender sender : this.users.getActives()) {
-            this.sendQuestion(sender, false);
-        }
+        this.sendQuestion();
         this.startHintTimer();
     }
-    
+
     private void startHintTimer() {
-        this.timer.schedule(new TimerTask() {
-            
+        this.scheduleTask(new TimerTask() {
+
             @Override
             public void run() {
                 Trivia.this.updateHint();
@@ -277,35 +285,35 @@ public class Trivia extends JavaPlugin {
     public void updateHint() {
         if (this.hints == this.settings.hintCount) {
             this.users.sendMessage(ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right. The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
-            this.users.sendMessage("Next question in " + ChatColor.GREEN + this.settings.questionsDelay + ChatColor.DARK_AQUA + " seconds.");
+            this.users.sendMessage("Next question in " + ChatColor.GREEN + this.settings.questionsDelay + ChatColor.WHITE + " seconds.");
             this.nextQuestion();
         } else {
-            this.hinter.nextHint();
-    
-            for (CommandSender player : this.users.getActives()) {
-                this.sendQuestion(player, false);
+            if (this.task != null) {
+                this.task.cancel();
             }
-            // System.out.println("Q: " + this.getQuestion());
-            // System.out.println("H: " + "[" + this.hints + "/" +
-            // TriviaSettings.maxHints + "] " + this.getHint() + " " +
-            // this.getAnswer());
-    
             this.hints++;
+            this.hinter.nextHint();
+
+            this.sendQuestion();
+
             this.startHintTimer();
         }
     }
 
     public void loadQuestions(CommandSender sender) {
         File[] list = this.settings.questionfiles;
-        if (list == null || list.length <= 0) {
+        if (!MinecraftUtil.isSet(list)) {
             sender.sendMessage(ChatColor.RED + "No files were loaded!");
             Trivia.logger.severe("No files are added to load.");
         } else {
+            this.users.sendMessage("Stop question to load questions.");
+            this.stopQuestion();
+            this.questions.clear();
             this.loadQuestions(list, sender);
             sender.sendMessage("Loaded questions.");
         }
     }
-    
+
     private void loadQuestions(File[] files, CommandSender sender) {
         for (File file : files) {
             if (file.isDirectory()) {
@@ -317,11 +325,11 @@ public class Trivia extends JavaPlugin {
     }
 
     public void loadQuestions() {
-        System.out.println("hö");
         this.loadQuestions(new CommandSender() {
 
             @Override
-            public void sendMessage(String message) {}
+            public void sendMessage(String message) {
+            }
 
             @Override
             public boolean isOp() {
@@ -332,10 +340,10 @@ public class Trivia extends JavaPlugin {
             public Server getServer() {
                 return Trivia.this.getServer();
             }
-            
+
         });
     }
-    
+
     public void loadQuestions(File file, CommandSender sender) {
         if (file.exists() && file.isFile()) {
             List<String> q = new ArrayList<String>();
@@ -347,13 +355,13 @@ public class Trivia extends JavaPlugin {
             this.parseTriviaQuestions(q, this.questions);
             sender.sendMessage("Loaded questions from " + file.getName());
             Trivia.logger.info("Loaded questions from " + file.getName());
-        } else {            
+        } else {
             Trivia.logger.warning("Failed to load " + file.getName());
         }
     }
 
-    public List<Question> parseTriviaQuestions(List<String> triviaQuestions) {
-        List<Question> result = new ArrayList<Question>(triviaQuestions.size());
+    public List<QuestionInterface> parseTriviaQuestions(List<String> triviaQuestions) {
+        List<QuestionInterface> result = new ArrayList<QuestionInterface>(triviaQuestions.size());
 
         for (String string : triviaQuestions) {
             if (!string.isEmpty()) {
@@ -409,14 +417,17 @@ public class Trivia extends JavaPlugin {
     }
 
     public List<String> readLines(File f) throws IOException {
-        FileReader fileReader = new FileReader(f);
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
         List<String> lines = new ArrayList<String>();
-        String line = null;
-        while ((line = bufferedReader.readLine()) != null) {
-            lines.add(line);
+        FileReader fileReader = new FileReader(f);
+        try {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.add(line);
+            }
+        } finally {
+            fileReader.close();
         }
-        bufferedReader.close();
         return lines;
     }
 
@@ -426,20 +437,24 @@ public class Trivia extends JavaPlugin {
 
     // MESSAGES
 
-    /**
-     * Formats and sends a question and hint to a player.
-     * 
-     * @param player
-     *            The player to send the question to.
-     */
-    public void sendQuestion(CommandSender player, boolean joined) {
-        player.sendMessage(this.hinter.getQuestion().getQuestion());
-        player.sendMessage("Hint [" + ChatColor.GREEN + (joined ? (this.hints - 1) : this.hints) + ChatColor.WHITE + "/" + ChatColor.GREEN + this.settings.hintCount + ChatColor.WHITE + "]: " + this.hinter.getHint());
+    private String[] getQuestionMessage() {
+        if (this.canAnswer) {
+            return new String[] { this.hinter.getQuestion().getQuestion(), "Hint [" + ChatColor.GREEN + this.hints + ChatColor.WHITE + "/" + ChatColor.GREEN + this.settings.hintCount + ChatColor.WHITE + "]: " + this.hinter.getHint() };
+        } else {
+            return new String[0];
+        }
     }
-    
+
+    /**
+     * Formats and sends a question and hint to all players.
+     */
     public void sendQuestion() {
-        for (CommandSender sender : this.users.getActives()) {
-            this.sendQuestion(sender, false);
+        this.users.sendMessage(this.getQuestionMessage());
+    }
+
+    public void sendQuestion(CommandSender sender) {
+        for (String line : this.getQuestionMessage()) {
+            sender.sendMessage(line);
         }
     }
 
@@ -460,7 +475,7 @@ public class Trivia extends JavaPlugin {
             e.printStackTrace();
         }
     }
-    
+
     public void sendRanking(Player player) {
         this.sendRanking(player.getName(), player);
     }
@@ -509,9 +524,8 @@ public class Trivia extends JavaPlugin {
             this.canAnswer = false;
             long endTime = (new Date().getTime()) - this.startTime;
 
-            double time = Math.round((endTime / 10));
-            time = time / 100;
-            
+            double time = Math.round(endTime / 10) / 100;
+
             this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
             this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
 
@@ -521,10 +535,9 @@ public class Trivia extends JavaPlugin {
         } else {
             return false;
         }
-    }   
+    }
 
-    
-    public void reward(Player p) { 
+    public void reward(Player p) {
         for (Reward<? extends RewardSettings> reward : this.rewards) {
             reward.reward(p, this.hints);
         }

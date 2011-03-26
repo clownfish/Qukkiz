@@ -38,7 +38,7 @@ public class RestartCommand extends CommonHelpableSubCommand {
             if (Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_START) && Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_STOP)) {
                 if (this.plugin.triviaRunning()) {
                     this.plugin.stopTrivia();
-                    this.plugin.startTrivia(true);
+                    this.plugin.startTrivia();
                 } else {
                     sender.sendMessage(ChatColor.RED + "Qukkiz isn't running at the moment.");
                 }

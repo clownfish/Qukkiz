@@ -86,14 +86,19 @@ public class QukkizUsers {
         return MinecraftUtil.toogleEntry(player.getName(), this.stored);
     }
 
-    public void sendMessage(String message) {
-        this.sendMessage(message, null);
+    public void sendMessage(String... message) {
+        this.sendMessage(null, message);
     }
 
-    public void sendMessage(String message, CommandSender except) {
+    public void sendMessage(CommandSender except, String... message) {
+        if (message.length == 0) {
+            return;
+        }
         for (CommandSender user : this.active) {
             if (!user.equals(except)) {
-                user.sendMessage(message);
+                for (String messageLine : message) {
+                    user.sendMessage(messageLine);
+                }
             }
         }
     }
