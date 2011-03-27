@@ -1,9 +1,9 @@
 package de.xzise.qukkiz.questions;
 
 import de.xzise.qukkiz.QukkizSettings;
-import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.hinter.IntHinter;
-import de.xzise.qukkiz.hinter.IntHinterSettings;
+import de.xzise.qukkiz.questioner.FirstComeQuestioner;
+import de.xzise.qukkiz.questioner.Questioner;
 
 public class EstimateQuestion extends Question {
 
@@ -29,8 +29,8 @@ public class EstimateQuestion extends Question {
     }
 
     @Override
-    public Hinter<IntHinterSettings> createHinter() {
-        return new IntHinter(this.answer, this.settings.intHinter, this);
+    public Questioner createHinter() {
+        return new FirstComeQuestioner(new IntHinter(this.answer, this.settings.intHinter), this);
     }
 
 }

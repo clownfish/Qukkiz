@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 import nl.blaatz0r.Trivia.Trivia;
 
+import org.bukkit.ChatColor;
+import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -19,6 +21,12 @@ public class QukkizUsers {
 
     private List<String> stored = new ArrayList<String>();
     private List<CommandSender> active = new ArrayList<CommandSender>();
+    
+    private final File file;
+    
+    public QukkizUsers(File file) {
+        this.file = file;
+    }
 
     private boolean createFile(File f) {
         if (!f.exists()) {
@@ -34,20 +42,39 @@ public class QukkizUsers {
         }
     }
 
+    public void readFile() {
+        this.readFile(this.file);
+    }
+    
+    public void readFile(Server server) {
+        this.readFile(this.file, server);
+    }
+    
     public void readFile(File f) {
+        this.readFile(f, null);
+    }
+    
+    public void readFile(File f, Server server) {
         if (this.createFile(f)) {
             Scanner scanner;
             try {
                 scanner = new Scanner(f);
                 try {
-
+                    this.stored.clear();
                     while (scanner.hasNextLine()) {
                         String line = scanner.nextLine();
                         if (MinecraftUtil.isSet(line)) {
                             this.stored.add(line);
                         }
                     }
-
+                    if (server != null) {
+                        for (String user : this.stored) {
+                            Player p = server.getPlayer(user);
+                            if (p != null) {
+                                this.active.add(p);
+                            }
+                        }
+                    }
                 } finally {
                     scanner.close();
                 }
@@ -59,6 +86,10 @@ public class QukkizUsers {
         }
     }
 
+    public void storeUsers() {
+        this.storeUsers(this.file);
+    }
+    
     public void storeUsers(File f) {
         if (this.createFile(f)) {
             try {
@@ -113,7 +144,10 @@ public class QukkizUsers {
 
     public void join(Player player) {
         if (this.stored.contains(player.getName())) {
-            this.active.add(player);
+            if (!this.active.contains(player)) {
+                this.active.add(player);
+                player.sendMessage("Qukkiz is now " + ChatColor.GREEN + "enabled" + ChatColor.WHITE + ".");
+            }
         }
     }
 

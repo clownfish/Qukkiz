@@ -3,19 +3,15 @@ package de.xzise.qukkiz.hinter;
 import java.util.Arrays;
 import java.util.Random;
 
-import de.xzise.qukkiz.questions.QuestionInterface;
-
-public class ChoiceHinter extends BestGuessHinter<ChoiceHinterSettings> {
+public class ChoiceHinter extends DefaultHinter<ChoiceHinterSettings> {
 
     private final String[] answers;
     private final int[] answerIdx;
-    private final QuestionInterface question;
     
-    public ChoiceHinter(String[] answers, ChoiceHinterSettings settings, QuestionInterface question) {
+    public ChoiceHinter(String[] answers, ChoiceHinterSettings settings) {
         super(settings);
         this.answers = answers;
         this.answerIdx = new int[answers.length];
-        this.question = question;
         
         boolean[] used = new boolean[this.answers.length];
         Arrays.fill(used, false);
@@ -32,7 +28,7 @@ public class ChoiceHinter extends BestGuessHinter<ChoiceHinterSettings> {
     
     @Override
     public void nextHint() {        
-        if (this.countVisibleAnswers() > 2) {
+        if (this.countVisibleAnswers() > this.getSettings().minimum) {
             Random r = new Random();
             int idx;
             do {
@@ -45,6 +41,7 @@ public class ChoiceHinter extends BestGuessHinter<ChoiceHinterSettings> {
     @Override
     public String getHint() {
         int count = this.countVisibleAnswers();
+        
         StringBuilder choices = new StringBuilder();
         int offset = 0;
         for (int i : this.answerIdx) {
@@ -67,11 +64,6 @@ public class ChoiceHinter extends BestGuessHinter<ChoiceHinterSettings> {
             }
         }
         return count;
-    }
-
-    @Override
-    public QuestionInterface getQuestion() {
-        return this.question;
     }
     
 }

@@ -38,8 +38,7 @@ import de.xzise.qukkiz.QukkizUsers;
 import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 import de.xzise.qukkiz.commands.CommandMap;
 import de.xzise.qukkiz.hinter.Answer;
-import de.xzise.qukkiz.hinter.Hinter;
-import de.xzise.qukkiz.hinter.HinterSettings;
+import de.xzise.qukkiz.questioner.Questioner;
 import de.xzise.qukkiz.questions.EstimateQuestion;
 import de.xzise.qukkiz.questions.MultipleChoiceQuestion;
 import de.xzise.qukkiz.questions.QuestionInterface;
@@ -77,7 +76,7 @@ public class Trivia extends JavaPlugin {
 
     // Qukkiz additions
     private List<QuestionInterface> questions;
-    private Hinter<? extends HinterSettings> hinter;
+    private Questioner questioner;
     private CommandMap commands;
     private QukkizUsers users;
     private List<Reward<? extends RewardSettings>> rewards;
@@ -108,8 +107,8 @@ public class Trivia extends JavaPlugin {
         this.name = this.getDescription().getName();
         this.version = this.getDescription().getVersion();
         this.commands = new CommandMap(this);
-        this.users = new QukkizUsers();
-        this.users.readFile(new File(this.getDataFolder(), "stored-users.txt"));
+        this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"));
+        this.users.readFile(this.getServer());
 
         this.db = new Database();
         db.connect(this.settings.database);
@@ -291,18 +290,13 @@ public class Trivia extends JavaPlugin {
      */
     public void updateHint() {
         if (this.hints == this.settings.hintCount) {
-            Answer a = this.hinter.getBestAnswer();
-            if (a == null) {
-                this.noAnswer();
-            } else {
-                this.proposeWinner(a);
-            }
+            this.proposeWinner();
         } else {
             if (this.task != null) {
                 this.task.cancel();
             }
             this.hints++;
-            this.hinter.nextHint();
+            this.questioner.getHinter().nextHint();
 
             this.sendQuestion();
 
@@ -311,7 +305,7 @@ public class Trivia extends JavaPlugin {
     }
     
     private void noAnswer() {
-        this.users.sendMessage(ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right. The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
+        this.users.sendMessage(ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right. The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());
         this.users.sendMessage("Next question in " + ChatColor.GREEN + this.settings.questionsDelay + ChatColor.WHITE + " seconds.");
         this.nextQuestion();
     }
@@ -430,7 +424,7 @@ public class Trivia extends JavaPlugin {
      * Reads a question from a file and updates question and answer.
      */
     public void readQuestion() {
-        this.hinter = MinecraftUtil.getRandom(this.questions).createHinter();
+        this.questioner = MinecraftUtil.getRandom(this.questions).createHinter();
     }
 
     public boolean triviaEnabled(CommandSender p) {
@@ -460,7 +454,7 @@ public class Trivia extends JavaPlugin {
 
     private String[] getQuestionMessage() {
         if (this.canAnswer) {
-            return new String[] { this.hinter.getQuestion().getQuestion(), "Hint [" + ChatColor.GREEN + this.hints + ChatColor.WHITE + "/" + ChatColor.GREEN + this.settings.hintCount + ChatColor.WHITE + "]: " + this.hinter.getHint() };
+            return new String[] { this.questioner.getQuestion().getQuestion(), "Hint [" + ChatColor.GREEN + this.hints + ChatColor.WHITE + "/" + ChatColor.GREEN + this.settings.hintCount + ChatColor.WHITE + "]: " + this.questioner.getHinter().getHint() };
         } else {
             return new String[0];
         }
@@ -542,13 +536,8 @@ public class Trivia extends JavaPlugin {
 
     public boolean answerQuestion(String answer, Player player) {
         if (this.canAnswer) {
-            if (this.hinter.putAnswer(new Answer(new Date().getTime() - this.startTime, answer, player))) {
-                Answer a = this.hinter.getBestAnswer();
-                if (a != null) {
-                    this.noAnswer();
-                } else {
-                    this.proposeWinner(a);
-                }
+            if (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, answer, player))) {
+                this.proposeWinner();
             } else {
                 return false;
             }
@@ -564,10 +553,19 @@ public class Trivia extends JavaPlugin {
         double time = Math.round(answer.time / 10) / 100;
 
         this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
-        this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.hinter.getQuestion().getAnswer());
+        this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());
 
         this.reward(answer.player);
         this.nextQuestion();
+    }
+    
+    private void proposeWinner() {
+        Answer a = this.questioner.getBestAnswer();
+        if (a == null) {
+            this.noAnswer();
+        } else {
+            this.proposeWinner(a);
+        }
     }
 
     public void reward(Player p) {

@@ -1,7 +1,6 @@
 package de.xzise.qukkiz.questions;
 
-import de.xzise.qukkiz.hinter.Hinter;
-import de.xzise.qukkiz.hinter.HinterSettings;
+import de.xzise.qukkiz.questioner.Questioner;
 
 public interface QuestionInterface {
     
@@ -9,7 +8,7 @@ public interface QuestionInterface {
     
     String getAnswer();
     
-    Hinter<? extends HinterSettings> createHinter();
+    Questioner createHinter();
     
     String getQuestion();
         
