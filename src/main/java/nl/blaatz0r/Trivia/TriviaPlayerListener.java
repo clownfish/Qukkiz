@@ -22,6 +22,7 @@ public class TriviaPlayerListener extends PlayerListener {
         this.users = users;
     }
     
+    @Override
     public void onPlayerChat(PlayerChatEvent event) {
     	String msg = event.getMessage();
     	Player player = event.getPlayer();
@@ -30,10 +31,12 @@ public class TriviaPlayerListener extends PlayerListener {
     	}
     }
     
+    @Override
     public void onPlayerQuit(PlayerEvent event) {
         this.users.quit(event.getPlayer());
     }
     
+    @Override
     public void onPlayerJoin(PlayerEvent event) {
         this.users.join(event.getPlayer());
     }

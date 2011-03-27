@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import nl.blaatz0r.Trivia.Trivia;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -143,7 +144,10 @@ public class QukkizUsers {
 
     public void join(Player player) {
         if (this.stored.contains(player.getName())) {
-            this.active.add(player);
+            if (!this.active.contains(player)) {
+                this.active.add(player);
+                player.sendMessage("Qukkiz is now " + ChatColor.GREEN + "enabled" + ChatColor.WHITE + ".");
+            }
         }
     }
 

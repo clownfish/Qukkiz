@@ -11,40 +11,50 @@ public class WordHinter implements Hinter<WordHinterSettings> {
 
     private WordHinterSettings settings;
     private char[] hint;
+    private final int maskedCount;
+    private final boolean[] masked;
     private final String hintResult;
     private final QuestionInterface question;
     
     public WordHinter(String hintResult, WordHinterSettings settings, QuestionInterface question) {
         this.setSettings(settings);
         this.hintResult = hintResult;
+        this.masked = new boolean[this.hintResult.length()];
+        
+        int maskedCount = 0;
         this.hint = REPLACE_PATTERN.matcher(this.hintResult).replaceAll("*").toCharArray();
+        for (int i = 0; i < this.hint.length; i++) {
+            this.masked[i] = this.hint[i] != this.hintResult.charAt(i);
+            if (this.masked[i]) {
+                maskedCount++;
+            }
+        }
+        this.maskedCount = maskedCount;
+        
         this.question = question;
     }
     
     @Override
     public void nextHint() {
-        this.nextHint(this.settings.lettersPerHint);
-    }
-    
-    public void nextHint(int charsPerHint) {
         // Now many new chars should be revealed?
-        int newChars = (int) Math.ceil(this.hintResult.length() / (double) charsPerHint);
+        int newChars = (int) Math.ceil(this.maskedCount / (double) this.settings.lettersPerHint);
         
         int asteriskCount = 0;
-        for (char c : this.hint) {
-            if (c == '*') {
+        for (boolean bool : this.masked) {
+            if (bool) {
                 asteriskCount++;
             }
         }
         
         // At least one char has to be not revealed
-        if (asteriskCount <= newChars) {
-            newChars = asteriskCount - 1;
+        if (asteriskCount < newChars + this.settings.minimumMasked) {
+            newChars = asteriskCount - this.settings.minimumMasked;
         }
         
         while (newChars > 0) {
             int replace = new Random().nextInt(this.hint.length);
-            if (this.hint[replace] == '*') {
+            if (this.masked[replace]) {
+                this.masked[replace] = true;
                 this.hint[replace] = this.hintResult.charAt(replace);
                 newChars--;
             }
