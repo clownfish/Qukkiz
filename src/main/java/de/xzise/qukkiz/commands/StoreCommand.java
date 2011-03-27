@@ -41,6 +41,7 @@ public class StoreCommand extends CommonHelpableSubCommand {
                 } else {
                     sender.sendMessage("Qukkiz removed " + ChatColor.GREEN + ((Player) sender).getName() + ChatColor.WHITE + ".");
                 }
+                this.plugin.getUsers().storeUsers();
             } else {
                 sender.sendMessage(ChatColor.RED + "Only in-game players could store if qukkiz is used.");
             }

@@ -35,9 +35,13 @@ public class AnswerCommand extends CommonHelpableSubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (sender instanceof Player) {
-            if (parameters.length == 2) {
+            if (parameters.length >= 2) {
+                String answer = parameters[1];
+                for (int i = 2; i < parameters.length; i++) {
+                    answer += " " + parameters[i];
+                }
                 // TODO: Answer here
-                this.plugin.answerQuestion(parameters[1], (Player) sender);
+                this.plugin.answerQuestion(answer, (Player) sender);
                 return true;
             } else {
                 return false;
