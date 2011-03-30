@@ -9,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import de.xzise.commands.CommonCommandMap;
+import de.xzise.commands.CommonHelpCommand;
 import de.xzise.commands.HelpCommand;
 import de.xzise.commands.SubCommand;
 import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
@@ -28,7 +29,7 @@ public class CommandMap extends CommonCommandMap {
     public CommandMap(Trivia plugin) {
         super();
         
-        HelpCommand helper = new HelperCommand();
+        HelpCommand helper = new CommonHelpCommand("Qukkiz");
         SubCommand enable = new EnableCommand(plugin);
         
         List<SubCommand> commands = new ArrayList<SubCommand>();

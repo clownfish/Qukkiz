@@ -1,10 +1,10 @@
 package de.xzise.qukkiz.reward;
 
-import org.bukkit.entity.Player;
+import de.xzise.qukkiz.hinter.Answer;
 
 public interface Reward<Settings extends RewardSettings> {
 
-    void reward(Player player, int hints);
+    void reward(Answer answer);
     
     void setSettings(Settings settings);
     

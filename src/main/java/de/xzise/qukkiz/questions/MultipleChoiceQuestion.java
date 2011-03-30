@@ -4,8 +4,8 @@ import java.util.Arrays;
 
 import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.hinter.ChoiceHinter;
-import de.xzise.qukkiz.hinter.ChoiceHinterSettings;
-import de.xzise.qukkiz.hinter.Hinter;
+import de.xzise.qukkiz.questioner.BestGuessQuestioner;
+import de.xzise.qukkiz.questioner.Questioner;
 
 public class MultipleChoiceQuestion extends Question {
 
@@ -23,18 +23,18 @@ public class MultipleChoiceQuestion extends Question {
             offset++;
         }
         String question = segments[offset];
-        String[] answers = Arrays.copyOfRange(segments, offset + 1, segments.length - offset);
+        String[] answers = Arrays.copyOfRange(segments, offset + 1, segments.length);
         return new MultipleChoiceQuestion(question, settings, answers);
     }
 
     @Override
-    public boolean testAnswer(String answer) {
-        return this.answers[0].equalsIgnoreCase(answer);
+    public Integer testAnswer(String answer) {
+        return Question.parseAnswerTest(this.answers[0].equalsIgnoreCase(answer));
     }
 
     @Override
-    public Hinter<ChoiceHinterSettings> createHinter() {
-        return new ChoiceHinter(this.answers, this.settings.choiceHinter, this);
+    public Questioner createHinter() {
+        return new BestGuessQuestioner(new ChoiceHinter(this.answers, this.settings.choiceHinter), this);
     }
 
     @Override

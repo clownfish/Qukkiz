@@ -1,9 +1,9 @@
 package de.xzise.qukkiz.questions;
 
 import de.xzise.qukkiz.QukkizSettings;
-import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.hinter.WordHinter;
-import de.xzise.qukkiz.hinter.WordHinterSettings;
+import de.xzise.qukkiz.questioner.FirstComeQuestioner;
+import de.xzise.qukkiz.questioner.Questioner;
 
 public class TextQuestion extends Question {
 
@@ -15,13 +15,13 @@ public class TextQuestion extends Question {
     }
     
     @Override
-    public boolean testAnswer(String answer) {
+    public Integer testAnswer(String answer) {
         for (String allowedAnswer : this.answers) {
             if (answer.equalsIgnoreCase(allowedAnswer)) {
-                return true;
+                return 0;
             }
         }
-        return false;
+        return null;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class TextQuestion extends Question {
     }
 
     @Override
-    public Hinter<WordHinterSettings> createHinter() {
-        return new WordHinter(this.answers[0], this.settings.wordHinter, this);
+    public Questioner createHinter() {
+        return new FirstComeQuestioner(new WordHinter(this.answers[0], this.settings.wordHinter), this);
     }
 }

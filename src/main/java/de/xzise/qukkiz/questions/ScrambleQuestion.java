@@ -5,9 +5,9 @@ import java.util.Random;
 import org.bukkit.ChatColor;
 
 import de.xzise.qukkiz.QukkizSettings;
-import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.hinter.WordHinter;
-import de.xzise.qukkiz.hinter.WordHinterSettings;
+import de.xzise.qukkiz.questioner.FirstComeQuestioner;
+import de.xzise.qukkiz.questioner.Questioner;
 
 public class ScrambleQuestion implements QuestionInterface {
 
@@ -23,8 +23,8 @@ public class ScrambleQuestion implements QuestionInterface {
     }
 
     @Override
-    public boolean testAnswer(String answer) {
-        return answer.equalsIgnoreCase(this.word);
+    public Integer testAnswer(String answer) {
+        return Question.parseAnswerTest(answer.equalsIgnoreCase(this.word));
     }
 
     public static String scramble(String word) {
@@ -51,9 +51,9 @@ public class ScrambleQuestion implements QuestionInterface {
     }
 
     @Override
-    public Hinter<WordHinterSettings> createHinter() {
+    public Questioner createHinter() {
         this.scrambled = scramble(word);
-        return new WordHinter(this.word, this.settings.wordHinter, this);
+        return new FirstComeQuestioner(new WordHinter(this.word, this.settings.wordHinter), this);
     }
 
     @Override

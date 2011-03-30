@@ -1,11 +1,12 @@
 package de.xzise.qukkiz.reward;
 
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import com.nijiko.coelho.iConomy.iConomy;
 import com.nijiko.coelho.iConomy.system.Bank;
+
+import de.xzise.qukkiz.hinter.Answer;
 
 public class CoinsReward implements Reward<CoinsRewardSettings> {
 
@@ -28,13 +29,13 @@ public class CoinsReward implements Reward<CoinsRewardSettings> {
     }
 
     @Override
-    public void reward(Player player, int hints) {
+    public void reward(Answer answer) {
         if (bank != null) {
-            int rewarded = this.start - hints * this.decrease;
-            this.bank.getAccount(player.getName()).add(rewarded);
-            player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + rewarded + ChatColor.WHITE + " coins.");
+            int rewarded = this.start - answer.hint * this.decrease;
+            this.bank.getAccount(answer.player.getName()).add(rewarded);
+            answer.player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + rewarded + ChatColor.WHITE + " coins.");
         } else {
-            player.sendMessage(ChatColor.RED + "You should have rewarded coins, but no iConomy there.");
+            answer.player.sendMessage(ChatColor.RED + "You should have rewarded coins, but no iConomy there.");
             // TODO: Tell logger
         }
     }
