@@ -15,13 +15,13 @@ public class TextQuestion extends Question {
     }
     
     @Override
-    public boolean testAnswer(String answer) {
+    public Integer testAnswer(String answer) {
         for (String allowedAnswer : this.answers) {
             if (answer.equalsIgnoreCase(allowedAnswer)) {
-                return true;
+                return 0;
             }
         }
-        return false;
+        return null;
     }
 
     @Override

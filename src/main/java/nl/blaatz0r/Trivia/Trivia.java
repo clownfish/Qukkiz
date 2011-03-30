@@ -5,9 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -473,21 +473,38 @@ public class Trivia extends JavaPlugin {
         }
     }
 
-    public void sendTop(CommandSender p) {
+    public void sendTop(CommandSender p, int page) {
         Connection con = db.getConnection();
         try {
-            Statement stat = con.createStatement();
-            ResultSet rs = stat.executeQuery("SELECT * FROM scores ORDER BY score DESC LIMIT 5;");
-
-            int i = 1;
+            int pageSize = MinecraftUtil.getMaximumLines(p);
+            pageSize = 2;
+            int offset = pageSize * (page - 1);
+            PreparedStatement statement = con.prepareStatement("SELECT * FROM scores ORDER BY score DESC LIMIT ?,?;");
+            statement.setInt(1, offset);
+            statement.setInt(2, pageSize);
+            ResultSet rs = statement.executeQuery();
+            int i = offset + 1;
             while (rs.next()) {
-                String q = ChatColor.AQUA + String.valueOf(i) + ". " + ChatColor.BLUE + rs.getString("name") + ChatColor.AQUA + " - " + ChatColor.BLUE + rs.getInt("score") + " points";
+                ChatColor color = ChatColor.GREEN;
+                switch (i) {
+                case 1 :
+                    color = ChatColor.GOLD;
+                    break;
+                case 2:
+                    color = ChatColor.GRAY;
+                    break;
+//                case 3:
+//                    color =
+                }
+                String q = color + MinecraftUtil.getOrdinal(i) + ChatColor.WHITE + ") " + ChatColor.GREEN + rs.getString("name") + ChatColor.WHITE + " with " + ChatColor.GREEN + rs.getInt("score") + ChatColor.WHITE + " points";
                 p.sendMessage(q);
                 i++;
             }
+            if (i == offset + 1) {
+                p.sendMessage("No players on this page.");
+            }
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Trivia.logger.warning("Unable to show the top", e);
         }
     }
 
@@ -498,45 +515,30 @@ public class Trivia extends JavaPlugin {
     public void sendRanking(String name, CommandSender sender) {
         Connection con = db.getConnection();
         try {
-            Statement stat = con.createStatement();
-            ResultSet rs = stat.executeQuery("SELECT (COUNT(*)+1) AS rank FROM scores WHERE score > (SELECT score FROM scores WHERE name = '" + name + "' LIMIT 1);");
-
-            int rank = rs.getInt("rank");
-            ResultSet check = stat.executeQuery("SELECT * FROM scores WHERE name = '" + name + "';");
-            if (check.next()) {
-                String rankName = "";
-                if ((rank % 100) / 10 == 1) {
-                    rankName = "th";
-                } else {
-                    switch (rank % 10) {
-                    case (1):
-                        rankName = "st";
-                        break;
-                    case (2):
-                        rankName = "nd";
-                        break;
-                    case (3):
-                        rankName = "rd";
-                        break;
-                    default:
-                        rankName = "th";
-                    }
-                }
-                sender.sendMessage((sender instanceof Player && ((Player) sender).getName().equals(name) ? "You are" : ChatColor.GREEN + name + ChatColor.WHITE + " is") + " currently ranked " + ChatColor.GREEN + rank + rankName + ChatColor.WHITE + ".");
+            PreparedStatement ps = con.prepareStatement("SELECT score FROM scores WHERE name = ?;");
+            ps.setString(1, name);
+            ps.execute();
+            ResultSet rs = ps.getResultSet();
+            if (!rs.isClosed()) {
+                int score = rs.getInt("score");
+                PreparedStatement s = con.prepareStatement("SELECT (COUNT(*)+1) AS rank FROM scores WHERE score > ?;");
+                s.setInt(1, score);
+                s.execute();
+                String rank = MinecraftUtil.getOrdinal(s.getResultSet().getInt("rank"));
+                sender.sendMessage((sender instanceof Player && ((Player) sender).getName().equals(name) ? "You are" : ChatColor.GREEN + name + ChatColor.WHITE + " is") + " currently ranked " + ChatColor.GREEN + rank + ChatColor.WHITE + " with " + ChatColor.GREEN + score + ChatColor.WHITE + " points.");
             } else {
                 sender.sendMessage((sender instanceof Player && ((Player) sender).getName().equals(name) ? "You are" : ChatColor.GREEN + name + ChatColor.WHITE + " is") + " currently not ranked.");
             }
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Trivia.logger.warning("Unable to show the rank of " + name, e);
         }
 
     }
 
     public boolean answerQuestion(String answer, Player player) {
         if (this.canAnswer) {
-            if (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, answer, player))) {
+            if (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, this.hints, answer, player))) {
                 this.proposeWinner();
             } else {
                 return false;
@@ -555,7 +557,7 @@ public class Trivia extends JavaPlugin {
         this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
         this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());
 
-        this.reward(answer.player);
+        this.reward(answer);
         this.nextQuestion();
     }
     
@@ -568,9 +570,9 @@ public class Trivia extends JavaPlugin {
         }
     }
 
-    public void reward(Player p) {
+    public void reward(Answer answer) {
         for (Reward<? extends RewardSettings> reward : this.rewards) {
-            reward.reward(p, this.hints);
+            reward.reward(answer);
         }
     }
 

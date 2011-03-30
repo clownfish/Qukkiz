@@ -3,10 +3,10 @@ package de.xzise.qukkiz.reward;
 import java.util.List;
 
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import de.xzise.MinecraftUtil;
+import de.xzise.qukkiz.hinter.Answer;
 
 public class ItemsReward implements Reward<ItemsRewardSettings> {
     
@@ -21,12 +21,12 @@ public class ItemsReward implements Reward<ItemsRewardSettings> {
     }
 
     @Override
-    public void reward(Player player, int hints) {
+    public void reward(Answer answer) {
         ItemStack stack = new ItemStack(MinecraftUtil.getRandom(this.items), 1);
-        if (player.getInventory().addItem(stack).isEmpty()) {
-            player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item!");
+        if (answer.player.getInventory().addItem(stack).isEmpty()) {
+            answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item!");
         } else {
-            player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item, but " + ChatColor.GREEN + "no empty" + ChatColor.WHITE + " slot!");
+            answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item, but " + ChatColor.GREEN + "no empty" + ChatColor.WHITE + " slot!");
         }
     }
 

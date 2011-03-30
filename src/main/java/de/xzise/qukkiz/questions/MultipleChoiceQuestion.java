@@ -28,8 +28,8 @@ public class MultipleChoiceQuestion extends Question {
     }
 
     @Override
-    public boolean testAnswer(String answer) {
-        return this.answers[0].equalsIgnoreCase(answer);
+    public Integer testAnswer(String answer) {
+        return Question.parseAnswerTest(this.answers[0].equalsIgnoreCase(answer));
     }
 
     @Override

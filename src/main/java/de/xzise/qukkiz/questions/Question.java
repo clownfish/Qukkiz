@@ -16,4 +16,20 @@ public abstract class Question implements QuestionInterface {
     public String getQuestion() {
         return this.question;
     }
+    
+    public static Integer parseAnswerTest(boolean bool) {
+        if (bool) {
+            return 0;
+        } else {
+            return null;
+        }
+    }
+    
+    public static boolean parseAnswerTest(Integer integer) {
+        if (integer == null || integer != 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 }

@@ -40,8 +40,10 @@ public class BestGuessQuestioner implements Questioner {
     @Override
     public Answer getBestAnswer() {
         Answer bestAnswer = null;
+        Integer bestDelta = null;
         for (Answer answer : this.answers) {
-            if (this.getQuestion().testAnswer(answer.answer) && (bestAnswer == null || bestAnswer.time > answer.time)) {
+            Integer delta = this.getQuestion().testAnswer(answer.answer);
+            if (delta != null && (bestDelta == null || Math.abs(delta) < Math.abs(bestDelta)) && (bestAnswer == null || bestAnswer.time > answer.time)) {
                 bestAnswer = answer;
             }
         }

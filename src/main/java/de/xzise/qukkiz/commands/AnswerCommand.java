@@ -56,5 +56,10 @@ public class AnswerCommand extends CommonHelpableSubCommand {
     public boolean listHelp(CommandSender sender) {
         return sender instanceof Player;
     }
+
+    @Override
+    public String[] permissionsNeeded() {
+        return new String[] { "trivia.play" };
+    }
     
 }

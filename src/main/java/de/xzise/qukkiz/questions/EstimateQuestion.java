@@ -15,11 +15,12 @@ public class EstimateQuestion extends Question {
     }
 
     @Override
-    public boolean testAnswer(String answer) {
+    public Integer testAnswer(String answer) {
         try {
-            return Integer.parseInt(answer) == this.answer;
+            int answerInt = Integer.parseInt(answer);            
+            return Math.abs(this.answer - answerInt);
         } catch (NumberFormatException nfe) {
-            return false;
+            return null;
         }
     }
 

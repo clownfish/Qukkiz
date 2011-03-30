@@ -2,6 +2,7 @@ package de.xzise.qukkiz.questioner;
 
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
+import de.xzise.qukkiz.questions.Question;
 import de.xzise.qukkiz.questions.QuestionInterface;
 
 public class FirstComeQuestioner implements Questioner {
@@ -28,7 +29,7 @@ public class FirstComeQuestioner implements Questioner {
 
     @Override
     public boolean putAnswer(Answer answer) {
-        if (this.correctAnswer == null && this.getQuestion().testAnswer(answer.answer)) {
+        if (this.correctAnswer == null && Question.parseAnswerTest(this.getQuestion().testAnswer(answer.answer))) {
             this.correctAnswer = answer;
         }
         return this.correctAnswer != null;

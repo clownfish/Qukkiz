@@ -23,8 +23,8 @@ public class ScrambleQuestion implements QuestionInterface {
     }
 
     @Override
-    public boolean testAnswer(String answer) {
-        return answer.equalsIgnoreCase(this.word);
+    public Integer testAnswer(String answer) {
+        return Question.parseAnswerTest(answer.equalsIgnoreCase(this.word));
     }
 
     public static String scramble(String word) {
