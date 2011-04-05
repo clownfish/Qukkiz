@@ -19,7 +19,7 @@ public class ScrambleQuestion implements QuestionInterface {
     
     public ScrambleQuestion(String word, QukkizSettings settings) {
         this.settings = settings;
-        this.word = word;
+        this.word = word.toLowerCase();
     }
 
     @Override

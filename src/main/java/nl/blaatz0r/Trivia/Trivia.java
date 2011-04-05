@@ -478,7 +478,6 @@ public class Trivia extends JavaPlugin {
         Connection con = db.getConnection();
         try {
             int pageSize = MinecraftUtil.getMaximumLines(p);
-            pageSize = 2;
             int offset = pageSize * (page - 1);
             PreparedStatement statement = con.prepareStatement("SELECT * FROM scores ORDER BY score DESC LIMIT ?,?;");
             statement.setInt(1, offset);
