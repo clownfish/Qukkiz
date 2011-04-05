@@ -36,7 +36,7 @@ public class VoteNextCommand extends CommonHelpableSubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
-            if (this.plugin.triviaEnabled(sender) && plugin.triviaRunning()) {
+            if (this.plugin.triviaEnabled(sender) && plugin.isRunning()) {
                 if (!Trivia.wrapper.permission(sender, PermissionTypes.VOTE)) {
                     sender.sendMessage(ChatColor.RED + "You don't have permissions to vote.");
                 } else if (this.plugin.voted.contains(sender)) {

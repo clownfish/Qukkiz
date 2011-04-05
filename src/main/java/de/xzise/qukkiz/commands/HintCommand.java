@@ -29,13 +29,13 @@ public class HintCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/qukkiz hint";
+        return "qukkiz hint";
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
-            if (this.plugin.triviaRunning()) {
+            if (this.plugin.isRunning()) {
                 if (this.plugin.permission(sender, PermissionTypes.HINT, PermissionTypes.ADMIN_HINT)) {
                     plugin.updateHint();
                 } else {

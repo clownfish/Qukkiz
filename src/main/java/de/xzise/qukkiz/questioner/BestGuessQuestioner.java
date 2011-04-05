@@ -12,11 +12,13 @@ public class BestGuessQuestioner implements Questioner {
     private final Set<Answer> answers = new HashSet<Answer>();
     private final Hinter<?> hinter;
     private final QuestionInterface question;
+    private final boolean cancelIfCorrect;
     
-    public BestGuessQuestioner(Hinter<?> hinter, QuestionInterface question) {
+    public BestGuessQuestioner(Hinter<?> hinter, QuestionInterface question, boolean cancelIfCorrect) {
         super();
         this.hinter = hinter;
         this.question = question;
+        this.cancelIfCorrect = cancelIfCorrect;
     }
 
     @Override
@@ -30,11 +32,18 @@ public class BestGuessQuestioner implements Questioner {
     }
 
     @Override
-    public boolean putAnswer(Answer answer) {
-        this.answers.remove(answer);
-        this.answers.add(answer);
-        //TODO: Cancel if last answer?
-        return false;
+    public AnswerResult putAnswer(Answer answer) {
+        Integer delta = this.getQuestion().testAnswer(answer.answer);
+        if (delta != null) {
+            this.answers.remove(answer);
+            this.answers.add(answer);
+            if (delta == 0 && this.cancelIfCorrect) {
+                return AnswerResult.CORRECT;
+            }
+            return AnswerResult.VALID;
+        } else {
+            return AnswerResult.INVALID;
+        }
     }
 
     @Override

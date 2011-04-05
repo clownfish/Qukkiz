@@ -16,16 +16,20 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.xzise.MinecraftUtil;
+import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 
 public class QukkizUsers {
 
     private List<String> stored = new ArrayList<String>();
     private List<CommandSender> active = new ArrayList<CommandSender>();
+    private boolean optInEnable;
+    private boolean running;
     
     private final File file;
     
     public QukkizUsers(File file) {
         this.file = file;
+        this.optInEnable = true;
     }
 
     private boolean createFile(File f) {
@@ -143,10 +147,13 @@ public class QukkizUsers {
     }
 
     public void join(Player player) {
-        if (this.stored.contains(player.getName())) {
-            if (!this.active.contains(player)) {
-                this.active.add(player);
-                player.sendMessage("Qukkiz is now " + ChatColor.GREEN + "enabled" + ChatColor.WHITE + ".");
+        // If optOut store acts negative (like unsubscribe)
+        if (this.stored.contains(player.getName()) ^ this.optInEnable) {
+            if (Trivia.wrapper.permission(player, PermissionTypes.PLAY) && this.running) {
+                if (!this.active.contains(player)) {
+                    this.active.add(player);
+                    player.sendMessage("Qukkiz is now " + ChatColor.GREEN + "enabled" + ChatColor.WHITE + ".");
+                }
             }
         }
     }
@@ -161,4 +168,20 @@ public class QukkizUsers {
         return count;
     }
 
+    public void setOptInEnable(boolean optInEnable) {
+        this.optInEnable = optInEnable;
+    }
+
+    public boolean isOptInEnable() {
+        return this.optInEnable;
+    }
+
+    public void run() {
+        this.running = true;
+        this.readFile();
+    }
+    
+    public void stop() {
+        this.running = false;
+    }
 }

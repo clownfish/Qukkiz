@@ -28,8 +28,7 @@ public class LeaderCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/qukkiz leader";
-//        return "/qukkiz leader [#page]";
+        return "qukkiz leader [#page]";
     }
 
     @Override

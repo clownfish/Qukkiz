@@ -28,11 +28,15 @@ public class FirstComeQuestioner implements Questioner {
     }
 
     @Override
-    public boolean putAnswer(Answer answer) {
+    public AnswerResult putAnswer(Answer answer) {
         if (this.correctAnswer == null && Question.parseAnswerTest(this.getQuestion().testAnswer(answer.answer))) {
             this.correctAnswer = answer;
         }
-        return this.correctAnswer != null;
+        if (this.correctAnswer == null) {
+            return AnswerResult.INVALID;
+        } else {
+            return AnswerResult.CORRECT;
+        }
     }
 
     @Override

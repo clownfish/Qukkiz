@@ -162,7 +162,9 @@ public class Trivia extends JavaPlugin {
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Low, this);
         pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Low, this);
 
-        this.startTrivia();
+        if (this.settings.startOnEnable) {
+            this.startTrivia();
+        }
         logger.info(name + " " + version + " enabled");
     }
 
@@ -176,6 +178,7 @@ public class Trivia extends JavaPlugin {
 
     public void startTrivia() {
         this.settings.loadSettings(this.getDataFolder());
+        this.users.setOptInEnable(this.settings.optInEnabled);
         this.loadQuestions();
 
         if (questions.size() != 0) {
@@ -203,8 +206,10 @@ public class Trivia extends JavaPlugin {
             }
 
             Trivia.logger.info("Trivia has started!");
-            this.users.sendMessage(ChatColor.GREEN + "Trivia has started! \\o/");
 
+            this.users.run();
+            this.users.sendMessage(ChatColor.GREEN + "Trivia has started! \\o/");
+            
             nextQuestion();
         } else {
             Trivia.logger.warning("No questions were loaded!");
@@ -226,6 +231,7 @@ public class Trivia extends JavaPlugin {
         hints = 0;
         canAnswer = false;
         triviaRunning = false;
+        this.users.stop();
 
         if (this.timer != null) {
             this.timer.cancel();
@@ -291,7 +297,9 @@ public class Trivia extends JavaPlugin {
      */
     public void updateHint() {
         if (this.hints == this.settings.hintCount) {
-            this.proposeWinner();
+            if (this.canAnswer) {
+                this.proposeWinner();
+            }
         } else {
             if (this.task != null) {
                 this.task.cancel();
@@ -538,12 +546,16 @@ public class Trivia extends JavaPlugin {
 
     public boolean answerQuestion(String answer, Player player) {
         if (this.canAnswer) {
-            if (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, this.hints, answer, player))) {
+            switch (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, this.hints, answer, player))) {
+            case CORRECT :
                 this.proposeWinner();
-            } else {
+                return true;
+            case VALID :
+                player.sendMessage("Your answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' was recognized.");
+            case INVALID :
                 return false;
             }
-            return true;            
+            return false;            
         } else {
             return false;
         }
@@ -577,7 +589,7 @@ public class Trivia extends JavaPlugin {
     }
 
     // BASIC GETTERS AND SETTERS
-    public boolean triviaRunning() {
+    public boolean isRunning() {
         return this.triviaRunning;
     }
 

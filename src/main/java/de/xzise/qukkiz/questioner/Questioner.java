@@ -6,11 +6,20 @@ import de.xzise.qukkiz.questions.QuestionInterface;
 
 public interface Questioner {
 
+    public enum AnswerResult {
+        /** Correct answer and question finished. */
+        CORRECT,
+        /** Possible answer but maybe not correct. */
+        VALID,
+        /** Impossible answer. */
+        INVALID;
+    }
+    
     QuestionInterface getQuestion();
     
     Hinter<?> getHinter();
     
-    boolean putAnswer(Answer answer);
+    AnswerResult putAnswer(Answer answer);
     
     Answer getBestAnswer();
     

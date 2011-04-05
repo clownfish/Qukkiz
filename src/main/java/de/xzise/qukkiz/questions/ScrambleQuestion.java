@@ -19,7 +19,7 @@ public class ScrambleQuestion implements QuestionInterface {
     
     public ScrambleQuestion(String word, QukkizSettings settings) {
         this.settings = settings;
-        this.word = word.toLowerCase();
+        this.word = word;
     }
 
     @Override
@@ -52,14 +52,14 @@ public class ScrambleQuestion implements QuestionInterface {
 
     @Override
     public Questioner createHinter() {
-        this.scrambled = scramble(word);
+        this.scrambled = scramble(this.word.toLowerCase());
         return new FirstComeQuestioner(new WordHinter(this.word, this.settings.wordHinter), this);
     }
 
     @Override
     public String getQuestion() {
         if (this.scrambled == null) {
-            this.scrambled = scramble(word);
+            this.scrambled = scramble(this.word.toLowerCase());
         }
         return QUESTION + this.scrambled;
     }

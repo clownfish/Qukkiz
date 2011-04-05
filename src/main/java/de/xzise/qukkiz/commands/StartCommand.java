@@ -29,14 +29,14 @@ public class StartCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/qukkiz start";
+        return "qukkiz start";
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
             if (Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_START)) {
-                if (!this.plugin.triviaRunning()) {
+                if (!this.plugin.isRunning()) {
                     this.plugin.startTrivia();
                 } else {
                     sender.sendMessage(ChatColor.RED + "Qukkiz is already running.");

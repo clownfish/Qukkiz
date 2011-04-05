@@ -29,13 +29,13 @@ public class NextCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/trivia next";
+        return "qukkiz next";
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
-            if (plugin.triviaRunning()) {
+            if (plugin.isRunning()) {
                 if (this.plugin.permission(sender, PermissionTypes.NEXT, PermissionTypes.ADMIN_NEXT)) {
                     this.plugin.nextQuestion();
                     

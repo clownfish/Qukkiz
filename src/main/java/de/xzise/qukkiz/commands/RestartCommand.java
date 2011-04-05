@@ -29,14 +29,14 @@ public class RestartCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/qukkiz restart";
+        return "qukkiz restart";
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
             if (Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_START) && Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_STOP)) {
-                if (this.plugin.triviaRunning()) {
+                if (this.plugin.isRunning()) {
                     this.plugin.stopTrivia();
                     this.plugin.startTrivia();
                 } else {

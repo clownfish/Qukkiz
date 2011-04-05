@@ -34,7 +34,7 @@ public class MultipleChoiceQuestion extends Question {
 
     @Override
     public Questioner createHinter() {
-        return new BestGuessQuestioner(new ChoiceHinter(this.answers, this.settings.choiceHinter), this);
+        return new BestGuessQuestioner(new ChoiceHinter(this.answers, this.settings.choiceHinter), this, false);
     }
 
     @Override
