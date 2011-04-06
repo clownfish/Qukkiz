@@ -314,7 +314,11 @@ public class Trivia extends JavaPlugin {
     }
     
     private void noAnswer() {
-        this.users.sendMessage(ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right. The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());
+        String result = ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right.";
+        if (this.settings.revealAnswer) {
+            result += " The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer() + ChatColor.WHITE + ".";
+        }
+        this.users.sendMessage(result);
         this.users.sendMessage("Next question in " + ChatColor.GREEN + this.settings.questionsDelay + ChatColor.WHITE + " seconds.");
         this.nextQuestion();
     }
@@ -551,7 +555,7 @@ public class Trivia extends JavaPlugin {
                 this.proposeWinner();
                 return true;
             case VALID :
-                player.sendMessage("Your answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' was recognized.");
+                player.sendMessage("Qukkiz recognized your answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "'.");
             case INVALID :
                 return false;
             }
@@ -564,7 +568,7 @@ public class Trivia extends JavaPlugin {
     private void proposeWinner(Answer answer) {
         this.canAnswer = false;
 
-        double time = Math.round(answer.time / 10) / 100;
+        double time = Math.round(answer.time / 10) / 100.0;
 
         this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
         this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());

@@ -52,7 +52,7 @@ public class QukkizSettings {
             config.setProperty("questions.hints.count", 3);
             config.setProperty("ranking.database", "qukkiz.db");
             config.setProperty("start.onEnable", true);
-            config.setProperty("start.optIn", false);
+            config.setProperty("start.optIn", true);
             config.save();
         } else {
             config.load();

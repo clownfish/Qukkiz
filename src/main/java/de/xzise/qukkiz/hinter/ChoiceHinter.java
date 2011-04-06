@@ -53,7 +53,7 @@ public class ChoiceHinter extends DefaultHinter<ChoiceHinterSettings> {
                 }
             }
         }
-        return choices.toString();
+        return "Select one: " + choices.toString();
     }
 
     private int countVisibleAnswers() {

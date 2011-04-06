@@ -52,8 +52,9 @@ public class BestGuessQuestioner implements Questioner {
         Integer bestDelta = null;
         for (Answer answer : this.answers) {
             Integer delta = this.getQuestion().testAnswer(answer.answer);
-            if (delta != null && (bestDelta == null || Math.abs(delta) < Math.abs(bestDelta)) && (bestAnswer == null || bestAnswer.time > answer.time)) {
+            if (delta != null && delta != Integer.MAX_VALUE && delta != Integer.MIN_VALUE && (bestDelta == null || Math.abs(delta) < Math.abs(bestDelta)) && (bestAnswer == null || bestAnswer.time > answer.time)) {
                 bestAnswer = answer;
+                bestDelta = delta;
             }
         }
         return bestAnswer;

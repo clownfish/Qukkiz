@@ -4,42 +4,34 @@ import java.util.Random;
 
 public class IntHinter extends DefaultHinter<IntHinterSettings> {
 
-    private final int ranges[];
     private final int value;
+    private double range;
+    private double lastRange;
     private int lastValue;
-    private int hintNumber;
-    private IntHinterSettings settings;
     
     public IntHinter(int value, IntHinterSettings settings) {
         super(settings);
         this.value = value;
-        this.hintNumber = 0;
-        // Hint count
-        this.ranges = new int[3];
-        this.ranges[0] = this.settings.start;
-        for (int i = 1; i < this.ranges.length; i++) {
-            this.ranges[i] = this.ranges[i - 1] / this.settings.decrease;
-        }
-        this.lastValue = this.getHintValue();
+        this.range = this.getSettings().start;
+        this.getHintValue();
     }
     
-    private int getHintValue() {
-        int range = (int) Math.ceil(value * (this.ranges[this.hintNumber] / 100.0));
-        
-        int newValue = new Random().nextInt(range);
-        return newValue;
+    private void getHintValue() {
+        int range = (int) Math.ceil(this.value * this.range);
+        this.lastValue = this.value + new Random().nextInt(range) - range / 2;
+        this.lastRange = this.range / 2;
+        this.range = this.range - this.getSettings().decrease;
         
     }
     
     @Override
     public void nextHint() {
-        this.hintNumber++;
-        this.lastValue = this.getHintValue();
+        this.getHintValue();
     }
 
     @Override
     public String getHint() {
-        return this.lastValue + " +/-" + this.ranges[this.hintNumber] + "%";
+        return this.lastValue + " +/-" + (int) Math.round(this.lastRange * 100) + "%";
     }
 
 }

@@ -72,11 +72,8 @@ public class QukkizUsers {
                         }
                     }
                     if (server != null) {
-                        for (String user : this.stored) {
-                            Player p = server.getPlayer(user);
-                            if (p != null) {
-                                this.active.add(p);
-                            }
+                        for (Player player : server.getOnlinePlayers()) {
+                            this.join(player);
                         }
                     }
                 } finally {
@@ -148,7 +145,7 @@ public class QukkizUsers {
 
     public void join(Player player) {
         // If optOut store acts negative (like unsubscribe)
-        if (this.stored.contains(player.getName()) ^ this.optInEnable) {
+        if (this.stored.contains(player.getName()) ^ !this.optInEnable) {
             if (Trivia.wrapper.permission(player, PermissionTypes.PLAY) && this.running) {
                 if (!this.active.contains(player)) {
                     this.active.add(player);

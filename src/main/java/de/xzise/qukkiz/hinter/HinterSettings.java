@@ -2,9 +2,8 @@ package de.xzise.qukkiz.hinter;
 
 import nl.blaatz0r.Trivia.Trivia;
 
+import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationNode;
-
-import de.xzise.ConfigurationNodeWrapper;
 
 public abstract class HinterSettings {
 
@@ -12,14 +11,14 @@ public abstract class HinterSettings {
     
     protected HinterSettings(String name, ConfigurationNode node) {
         this.name = name;
-        this.setValues(node);
+        if (node == null) {
+            this.setValues(Configuration.getEmptyNode());
+        } else {
+            this.setValues(node);
+        }
     }
     
-    protected abstract void setValues(ConfigurationNodeWrapper node);
-    
-    public final void setValues(ConfigurationNode node) {
-        this.setValues(new ConfigurationNodeWrapper(node));
-    }
+    public abstract void setValues(ConfigurationNode node);
     
     // Idea 2
     public static <T extends HinterSettings> T create(Class<T> clazz, ConfigurationNode node) {

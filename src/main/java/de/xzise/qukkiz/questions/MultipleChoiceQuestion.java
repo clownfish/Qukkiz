@@ -29,7 +29,14 @@ public class MultipleChoiceQuestion extends Question {
 
     @Override
     public Integer testAnswer(String answer) {
-        return Question.parseAnswerTest(this.answers[0].equalsIgnoreCase(answer));
+        Integer result = 0;
+        for (int i = 0; i < this.answers.length; i++) {
+            if (this.answers[i].equalsIgnoreCase(answer)) {
+                return result;
+            }
+            result = Integer.MAX_VALUE;
+        }
+        return null;
     }
 
     @Override
