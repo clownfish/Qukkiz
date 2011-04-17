@@ -21,7 +21,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -32,6 +31,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
 import de.xzise.MinecraftUtil;
+import de.xzise.NullaryCommandSender;
 import de.xzise.XLogger;
 import de.xzise.qukkiz.PermissionWrapper;
 import de.xzise.qukkiz.QukkizSettings;
@@ -148,9 +148,6 @@ public class Trivia extends JavaPlugin {
 
         // Test all plugins once!
         Trivia.wrapper.init(this.getServer().getPluginManager().getPlugin("Permissions"));
-        if (this.coinReward != null) {
-            this.coinReward.setEconomy(this.getServer().getPluginManager().getPlugin("iConomy"));
-        }
 
         PlayerListener playerListener = new TriviaPlayerListener(this, this.users);
 
@@ -202,7 +199,9 @@ public class Trivia extends JavaPlugin {
                 this.rewards.add(new ItemsReward(this.settings.itemsReward));
             }
             if (this.settings.coinsReward != null) {
-                this.rewards.add(new CoinsReward(this.settings.coinsReward));
+                this.coinReward = new CoinsReward(this.settings.coinsReward);
+                this.coinReward.setEconomy(this.getServer().getPluginManager().getPlugin("iConomy"));
+                this.rewards.add(this.coinReward);
             }
 
             Trivia.logger.info("Trivia has started!");
@@ -353,23 +352,7 @@ public class Trivia extends JavaPlugin {
     }
 
     public void loadQuestions() {
-        this.loadQuestions(new CommandSender() {
-
-            @Override
-            public void sendMessage(String message) {
-            }
-
-            @Override
-            public boolean isOp() {
-                return false;
-            }
-
-            @Override
-            public Server getServer() {
-                return Trivia.this.getServer();
-            }
-
-        });
+        this.loadQuestions(NullaryCommandSender.EMPTY_SENDER);
     }
 
     public void loadQuestions(File file, CommandSender sender) {
@@ -390,38 +373,47 @@ public class Trivia extends JavaPlugin {
 
     public List<QuestionInterface> parseTriviaQuestions(List<String> triviaQuestions) {
         List<QuestionInterface> result = new ArrayList<QuestionInterface>(triviaQuestions.size());
-
+        
         for (String string : triviaQuestions) {
             if (!string.isEmpty()) {
-                String[] segments = string.split("\\*");
-                if (segments.length > 1) {
-                    if (segments[0].equalsIgnoreCase("scramble")) {
-                        if (segments.length == 2) {
-                            result.add(new ScrambleQuestion(segments[1], this.settings));
-                        } else {
-                            Trivia.logger.warning("Bad format in scramble question: " + string);
-                        }
-                    } else if (segments[0].equalsIgnoreCase("multiple choice")) {
-                        if (segments.length > 3) {
-                            result.add(MultipleChoiceQuestion.create(segments, this.settings));
-                        } else {
-                            Trivia.logger.warning("Bad format in multiple choice question: " + string);
-                        }
-                    } else if (segments[0].equalsIgnoreCase("estimate")) {
-                        if (segments.length == 3) {
-                            try {
-                                result.add(new EstimateQuestion(segments[1], this.settings, Integer.parseInt(segments[2])));
-                            } catch (NumberFormatException nfe) {
-                                Trivia.logger.warning("Bad format in estimate question (unable to parse to int): " + string);
+                int comment = string.indexOf('#');
+                // Cut off commentary
+                if (comment > 0) {
+                    string = string.substring(0, comment);
+                } else if (comment == 0) {
+                    string = "";
+                }
+                if (!string.matches("\\s*")) {
+                    String[] segments = string.split("\\*");
+                    if (segments.length > 1) {
+                        if (segments[0].equalsIgnoreCase("scramble")) {
+                            if (segments.length == 2) {
+                                result.add(new ScrambleQuestion(segments[1], this.settings));
+                            } else {
+                                Trivia.logger.warning("Bad format in scramble question: " + string);
+                            }
+                        } else if (segments[0].equalsIgnoreCase("multiple choice")) {
+                            if (segments.length > 3) {
+                                result.add(MultipleChoiceQuestion.create(segments, this.settings));
+                            } else {
+                                Trivia.logger.warning("Bad format in multiple choice question: " + string);
+                            }
+                        } else if (segments[0].equalsIgnoreCase("estimate")) {
+                            if (segments.length == 3) {
+                                try {
+                                    result.add(new EstimateQuestion(segments[1], this.settings, Integer.parseInt(segments[2])));
+                                } catch (NumberFormatException nfe) {
+                                    Trivia.logger.warning("Bad format in estimate question (unable to parse to int): " + string);
+                                }
+                            } else {
+                                Trivia.logger.warning("Bad format in estimate question: " + string);
                             }
                         } else {
-                            Trivia.logger.warning("Bad format in estimate question: " + string);
+                            result.add(new TextQuestion(segments[0], this.settings, Arrays.copyOfRange(segments, 1, segments.length)));
                         }
                     } else {
-                        result.add(new TextQuestion(segments[0], this.settings, Arrays.copyOfRange(segments, 1, segments.length)));
+                        Trivia.logger.warning("Bad format in question: " + string);
                     }
-                } else {
-                    Trivia.logger.warning("Bad format in question: " + string);
                 }
             }
         }
@@ -496,19 +488,23 @@ public class Trivia extends JavaPlugin {
             statement.setInt(2, pageSize);
             ResultSet rs = statement.executeQuery();
             int i = offset + 1;
+            String ownName = MinecraftUtil.getPlayerName(p);
             while (rs.next()) {
-                ChatColor color = ChatColor.GREEN;
+                ChatColor rankColor = ChatColor.GREEN;
+                ChatColor nameColor = ChatColor.GREEN;
+                if (ownName != null && ownName.equalsIgnoreCase(rs.getString("name"))) {
+                    rankColor = ChatColor.BLUE;
+                    nameColor = ChatColor.BLUE;
+                }
                 switch (i) {
                 case 1 :
-                    color = ChatColor.GOLD;
+                    rankColor = ChatColor.GOLD;
                     break;
                 case 2:
-                    color = ChatColor.GRAY;
+                    rankColor = ChatColor.GRAY;
                     break;
-//                case 3:
-//                    color =
                 }
-                String q = color + MinecraftUtil.getOrdinal(i) + ChatColor.WHITE + ") " + ChatColor.GREEN + rs.getString("name") + ChatColor.WHITE + " with " + ChatColor.GREEN + rs.getInt("score") + ChatColor.WHITE + " points";
+                String q = rankColor + MinecraftUtil.getOrdinal(i) + ChatColor.WHITE + ") " + nameColor + rs.getString("name") + ChatColor.WHITE + " with " + ChatColor.GREEN + rs.getInt("score") + ChatColor.WHITE + " points";
                 p.sendMessage(q);
                 i++;
             }
@@ -555,7 +551,7 @@ public class Trivia extends JavaPlugin {
                 this.proposeWinner();
                 return true;
             case VALID :
-                player.sendMessage("Qukkiz recognized your answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "'.");
+                player.sendMessage("Qukkiz recognized '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' as your answer.");
             case INVALID :
                 return false;
             }
