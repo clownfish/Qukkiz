@@ -1,5 +1,7 @@
 package de.xzise.qukkiz.reward;
 
+import nl.blaatz0r.Trivia.Trivia;
+
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 
@@ -19,13 +21,13 @@ public class CoinsReward implements Reward<CoinsRewardSettings> {
     }
 
     public void setEconomy(Plugin plugin) {
-
         if (plugin instanceof iConomy) {
             this.bank = iConomy.getBank();
+            Trivia.logger.info("iConomy found and CoinsReward is enabled.");
         } else {
             this.bank = null;
+            Trivia.logger.info("iConomy not found and CoinsRewards is disabled.");
         }
-
     }
 
     @Override
@@ -33,10 +35,10 @@ public class CoinsReward implements Reward<CoinsRewardSettings> {
         if (bank != null) {
             int rewarded = this.start - answer.hint * this.decrease;
             this.bank.getAccount(answer.player.getName()).add(rewarded);
-            answer.player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + rewarded + ChatColor.WHITE + " coins.");
+            answer.player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + this.bank.format(rewarded) + ChatColor.WHITE + ".");
         } else {
             answer.player.sendMessage(ChatColor.RED + "You should have rewarded coins, but no iConomy there.");
-            // TODO: Tell logger
+            // TODO: Tell logger?
         }
     }
 

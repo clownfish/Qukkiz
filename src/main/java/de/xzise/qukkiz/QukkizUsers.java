@@ -26,9 +26,11 @@ public class QukkizUsers {
     private boolean running;
     
     private final File file;
+    private final Server server;
     
-    public QukkizUsers(File file) {
+    public QukkizUsers(File file, Server server) {
         this.file = file;
+        this.server = server;
         this.optInEnable = true;
     }
 
@@ -50,15 +52,7 @@ public class QukkizUsers {
         this.readFile(this.file);
     }
     
-    public void readFile(Server server) {
-        this.readFile(this.file, server);
-    }
-    
     public void readFile(File f) {
-        this.readFile(f, null);
-    }
-    
-    public void readFile(File f, Server server) {
         if (this.createFile(f)) {
             Scanner scanner;
             try {
@@ -71,10 +65,8 @@ public class QukkizUsers {
                             this.stored.add(line);
                         }
                     }
-                    if (server != null) {
-                        for (Player player : server.getOnlinePlayers()) {
-                            this.join(player);
-                        }
+                    for (Player player : this.server.getOnlinePlayers()) {
+                        this.join(player);
                     }
                 } finally {
                     scanner.close();

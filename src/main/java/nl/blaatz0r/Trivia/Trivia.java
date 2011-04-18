@@ -108,8 +108,8 @@ public class Trivia extends JavaPlugin {
         this.name = this.getDescription().getName();
         this.version = this.getDescription().getVersion();
         this.commands = new CommandMap(this);
-        this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"));
-        this.users.readFile(this.getServer());
+        this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"), this.getServer());
+        this.users.readFile();
 
         this.db = new Database();
         db.connect(this.settings.database);
