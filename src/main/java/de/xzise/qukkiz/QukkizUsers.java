@@ -16,16 +16,22 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.xzise.MinecraftUtil;
+import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 
 public class QukkizUsers {
 
     private List<String> stored = new ArrayList<String>();
     private List<CommandSender> active = new ArrayList<CommandSender>();
+    private boolean optInEnable;
+    private boolean running;
     
     private final File file;
+    private final Server server;
     
-    public QukkizUsers(File file) {
+    public QukkizUsers(File file, Server server) {
         this.file = file;
+        this.server = server;
+        this.optInEnable = true;
     }
 
     private boolean createFile(File f) {
@@ -46,15 +52,7 @@ public class QukkizUsers {
         this.readFile(this.file);
     }
     
-    public void readFile(Server server) {
-        this.readFile(this.file, server);
-    }
-    
     public void readFile(File f) {
-        this.readFile(f, null);
-    }
-    
-    public void readFile(File f, Server server) {
         if (this.createFile(f)) {
             Scanner scanner;
             try {
@@ -67,13 +65,8 @@ public class QukkizUsers {
                             this.stored.add(line);
                         }
                     }
-                    if (server != null) {
-                        for (String user : this.stored) {
-                            Player p = server.getPlayer(user);
-                            if (p != null) {
-                                this.active.add(p);
-                            }
-                        }
+                    for (Player player : this.server.getOnlinePlayers()) {
+                        this.join(player);
                     }
                 } finally {
                     scanner.close();
@@ -143,10 +136,13 @@ public class QukkizUsers {
     }
 
     public void join(Player player) {
-        if (this.stored.contains(player.getName())) {
-            if (!this.active.contains(player)) {
-                this.active.add(player);
-                player.sendMessage("Qukkiz is now " + ChatColor.GREEN + "enabled" + ChatColor.WHITE + ".");
+        // If optOut store acts negative (like unsubscribe)
+        if (this.stored.contains(player.getName()) ^ !this.optInEnable) {
+            if (Trivia.wrapper.permission(player, PermissionTypes.PLAY) && this.running) {
+                if (!this.active.contains(player)) {
+                    this.active.add(player);
+                    player.sendMessage("Qukkiz is now " + ChatColor.GREEN + "enabled" + ChatColor.WHITE + ".");
+                }
             }
         }
     }
@@ -161,4 +157,20 @@ public class QukkizUsers {
         return count;
     }
 
+    public void setOptInEnable(boolean optInEnable) {
+        this.optInEnable = optInEnable;
+    }
+
+    public boolean isOptInEnable() {
+        return this.optInEnable;
+    }
+
+    public void run() {
+        this.running = true;
+        this.readFile();
+    }
+    
+    public void stop() {
+        this.running = false;
+    }
 }

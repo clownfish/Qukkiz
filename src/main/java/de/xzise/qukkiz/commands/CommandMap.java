@@ -5,26 +5,12 @@ import java.util.List;
 
 import nl.blaatz0r.Trivia.Trivia;
 
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-
 import de.xzise.commands.CommonCommandMap;
 import de.xzise.commands.CommonHelpCommand;
 import de.xzise.commands.HelpCommand;
 import de.xzise.commands.SubCommand;
-import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 
 public class CommandMap extends CommonCommandMap {
-
-    @Override
-    public boolean executeCommand(CommandSender sender, String[] parameters) {
-        if (Trivia.wrapper.permission(sender, PermissionTypes.PLAY)) {
-            return super.executeCommand(sender, parameters);
-        } else {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to execute any command.");
-            return true;
-        }
-    }
     
     public CommandMap(Trivia plugin) {
         super();

@@ -23,6 +23,7 @@ public class QukkizSettings {
     
     public File[] questionfiles;
     public int questionsDelay;
+    public boolean revealAnswer;
     
     public IntHinterSettings intHinter;
     public WordHinterSettings wordHinter;
@@ -32,13 +33,30 @@ public class QukkizSettings {
     
     public File database;
     
+    public boolean optInEnabled;
+    public boolean startOnEnable;
+    
     public QukkizSettings(File dataPath) {
         this.loadSettings(dataPath);
     }
     
     public void loadSettings(File dataPath) {
-        Configuration config = new Configuration(new File(dataPath, "qukkiz.yml"));
-        config.load();
+        File file = new File(dataPath, "qukkiz.yml");
+        Configuration config = new Configuration(file);
+        if (!file.exists()) {
+            //TODO: Create default file
+            config.setProperty("questions.files", "'questions/'");
+            config.setProperty("questions.delay", 5);
+            config.setProperty("questions.reveal", true);
+            config.setProperty("questions.hints.delay", 15);
+            config.setProperty("questions.hints.count", 3);
+            config.setProperty("ranking.database", "qukkiz.db");
+            config.setProperty("start.onEnable", true);
+            config.setProperty("start.optIn", true);
+            config.save();
+        } else {
+            config.load();
+        }
 
         ConfigurationNode rewardsNode = config.getNode("rewards");
         this.pointsReward = RewardSettings.create(new PointsRewardSettings(), rewardsNode);
@@ -47,6 +65,7 @@ public class QukkizSettings {
         
         this.questionfiles = convert(config.getStringList("questions.files", new ArrayList<String>(0)), dataPath);
         this.questionsDelay = config.getInt("questions.delay", 5);
+        this.revealAnswer = config.getBoolean("questions.reveal", true);
         
         ConfigurationNode hintsNode = config.getNode("questions.hints");
         if (hintsNode != null) {
@@ -60,6 +79,9 @@ public class QukkizSettings {
         this.intHinter = new IntHinterSettings(hintsNode);
         this.wordHinter = new WordHinterSettings(hintsNode);
         this.choiceHinter = new ChoiceHinterSettings(hintsNode);
+        
+        this.optInEnabled = config.getBoolean("start.optIn", true);
+        this.startOnEnable = config.getBoolean("start.onEnable", true);
         
         this.database = new File(dataPath, config.getString("ranking.database", "qukkiz.db"));
     }

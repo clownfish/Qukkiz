@@ -4,11 +4,11 @@ import org.bukkit.util.config.ConfigurationNode;
 
 public class IntHinterSettings extends HinterSettings {
 
-    private static final int DEFAULT_START = 200;
-    private static final int DEFAULT_DECREASE = 4;
+    private static final double DEFAULT_START = 0.2;
+    private static final double DEFAULT_DECREASE = 0.05;
     
-    public int start;
-    public int decrease;
+    public double start;
+    public double decrease;
     
     public IntHinterSettings(ConfigurationNode node) {
         super("int", node);
@@ -18,8 +18,8 @@ public class IntHinterSettings extends HinterSettings {
     
     @Override
     public void setValues(ConfigurationNode node) {
-        this.start = node.getInt("start", DEFAULT_START);
-        this.decrease = node.getInt("decrease", DEFAULT_DECREASE);
+        this.start = node.getDouble("start", DEFAULT_START);
+        this.decrease = node.getDouble("decrease", DEFAULT_DECREASE);
     }
 
 }

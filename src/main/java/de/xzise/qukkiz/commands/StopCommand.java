@@ -29,14 +29,14 @@ public class StopCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/qukkiz stop";
+        return "qukkiz stop";
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
             if (Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_STOP)) {
-                if (this.plugin.triviaRunning()) {
+                if (this.plugin.isRunning()) {
                     this.plugin.stopTrivia();
                 } else {
                     sender.sendMessage(ChatColor.RED + "Qukkiz isn't running at the moment.");

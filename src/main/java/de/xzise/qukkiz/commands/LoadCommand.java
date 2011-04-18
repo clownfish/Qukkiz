@@ -31,7 +31,7 @@ public class LoadCommand extends CommonHelpableSubCommand {
 
     @Override
     public String getCommand() {
-        return "/qukkiz load [file]";
+        return "qukkiz load [file]";
     }
 
     @Override
