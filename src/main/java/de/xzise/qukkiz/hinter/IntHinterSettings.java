@@ -2,8 +2,6 @@ package de.xzise.qukkiz.hinter;
 
 import org.bukkit.util.config.ConfigurationNode;
 
-import de.xzise.ConfigurationNodeWrapper;
-
 public class IntHinterSettings extends HinterSettings {
 
     private static final int DEFAULT_START = 200;
@@ -19,9 +17,9 @@ public class IntHinterSettings extends HinterSettings {
     }
     
     @Override
-    protected void setValues(ConfigurationNodeWrapper node) {
-        this.start = node.getInteger("start", DEFAULT_START);
-        this.decrease = node.getInteger("decrease", DEFAULT_DECREASE);
+    public void setValues(ConfigurationNode node) {
+        this.start = node.getInt("start", DEFAULT_START);
+        this.decrease = node.getInt("decrease", DEFAULT_DECREASE);
     }
 
 }

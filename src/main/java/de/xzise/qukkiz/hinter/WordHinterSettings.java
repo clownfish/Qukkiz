@@ -2,8 +2,6 @@ package de.xzise.qukkiz.hinter;
 
 import org.bukkit.util.config.ConfigurationNode;
 
-import de.xzise.ConfigurationNodeWrapper;
-
 public class WordHinterSettings extends HinterSettings {
 
     private static final int DEFAULT_LETTERS_PER_HINT = 8;
@@ -17,9 +15,9 @@ public class WordHinterSettings extends HinterSettings {
     }
 
     @Override
-    protected void setValues(ConfigurationNodeWrapper node) {
-        this.lettersPerHint = node.getInteger("letters-per-hint", DEFAULT_LETTERS_PER_HINT);
-        this.minimumMasked = Math.max(node.getInteger("minimum-masked", DEFAULT_MINIMUM_MASKED), 0);
+    public void setValues(ConfigurationNode node) {
+        this.lettersPerHint = node.getInt("letters-per-hint", DEFAULT_LETTERS_PER_HINT);
+        this.minimumMasked = Math.max(node.getInt("minimum-masked", DEFAULT_MINIMUM_MASKED), 0);
     }
 
 }

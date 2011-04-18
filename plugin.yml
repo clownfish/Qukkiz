@@ -1,7 +1,7 @@
 name: Qukkiz
 main: nl.blaatz0r.Trivia.Trivia
 description: Qukkiz is a quiz game that is played in the minecraft chatbox.
-version: 0.4.1-upstream
+version: 0.5.1
 authors:
     - 'xZise'
     - 'blaatz0r'

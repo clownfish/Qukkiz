@@ -2,9 +2,8 @@ package nl.blaatz0r.Trivia;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerListener;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 import de.xzise.qukkiz.QukkizUsers;
 
@@ -33,12 +32,12 @@ public class TriviaPlayerListener extends PlayerListener {
     }
     
     @Override
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void onPlayerQuit(PlayerEvent event) {
         this.users.quit(event.getPlayer());
     }
     
     @Override
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    public void onPlayerJoin(PlayerEvent event) {
         this.users.join(event.getPlayer());
     }
 }

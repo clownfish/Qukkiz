@@ -24,8 +24,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.player.PlayerListener;
-import org.bukkit.event.server.PluginDisableEvent;
-import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.server.PluginEvent;
 import org.bukkit.event.server.ServerListener;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -122,7 +121,7 @@ public class Trivia extends JavaPlugin {
         // React on plugin enable/disable
         ServerListener serverListener = new ServerListener() {
             @Override
-            public void onPluginEnable(PluginEnableEvent event) {
+            public void onPluginEnabled(PluginEvent event) {
                 String name = event.getPlugin().getDescription().getName();
                 if (name.equals("Permissions")) {
                     Trivia.wrapper.init(event.getPlugin());
@@ -134,7 +133,7 @@ public class Trivia extends JavaPlugin {
             }
 
             @Override
-            public void onPluginDisable(PluginDisableEvent event) {
+            public void onPluginDisabled(PluginEvent event) {
                 String name = event.getPlugin().getDescription().getName();
                 if (name.equals("Permissions")) {
                     Trivia.wrapper.init(null);
