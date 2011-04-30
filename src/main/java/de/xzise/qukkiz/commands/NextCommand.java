@@ -44,7 +44,7 @@ public class NextCommand extends CommonHelpableSubCommand {
                     sender.sendMessage(ChatColor.RED + "You have no permission to select the next question.");
                 }
             } else {
-                sender.sendMessage(ChatColor.RED + "Trivia is not running.");
+                sender.sendMessage(ChatColor.RED + "Qukkiz is not running.");
             }
 
             return true;

@@ -42,7 +42,7 @@ public class HintCommand extends CommonHelpableSubCommand {
                     sender.sendMessage(ChatColor.RED + "You have no permission to update the hint.");
                 }
             } else {
-                sender.sendMessage(ChatColor.RED + "Trivia is not running.");
+                sender.sendMessage(ChatColor.RED + "Qukkiz is not running.");
             }
             return true;
         } else {

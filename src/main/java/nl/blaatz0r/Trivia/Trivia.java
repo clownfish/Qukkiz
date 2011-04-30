@@ -98,7 +98,7 @@ public class Trivia extends JavaPlugin {
         try {
             logger = new XLogger(this);
         } catch (NoSuchMethodError nsme) {
-            logger = new XLogger("Minecraft", "Trivia");
+            logger = new XLogger("Minecraft", "Qukkiz");
             logger.warning("Using old constructor!");
         }
 
@@ -204,16 +204,16 @@ public class Trivia extends JavaPlugin {
                 this.rewards.add(this.coinReward);
             }
 
-            Trivia.logger.info("Trivia has started!");
+            Trivia.logger.info("Qukkiz has started!");
 
             this.users.run();
-            this.users.sendMessage(ChatColor.GREEN + "Trivia has started! \\o/");
+            this.users.sendMessage(ChatColor.GREEN + "Qukkiz has started! \\o/");
             
             nextQuestion();
         } else {
             Trivia.logger.warning("No questions were loaded!");
             Trivia.logger.warning("Add some files to the qukkiz.yml");
-            this.users.sendMessage(ChatColor.RED + "Trivia cannot start because no questions were loaded.");
+            this.users.sendMessage(ChatColor.RED + "Qukkiz cannot start because no questions were loaded.");
         }
     }
 
@@ -224,7 +224,7 @@ public class Trivia extends JavaPlugin {
     }
 
     public void stopTrivia() {
-        this.users.sendMessage(ChatColor.RED + "Trivia has stopped. :(");
+        this.users.sendMessage(ChatColor.RED + "Qukkiz has stopped. :(");
 
         voted = new ArrayList<CommandSender>();
         hints = 0;

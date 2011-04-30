@@ -60,7 +60,7 @@ public class VoteNextCommand extends CommonHelpableSubCommand {
                     }
                 }
             } else {
-                sender.sendMessage(ChatColor.RED + "Trivia is not running.");
+                sender.sendMessage(ChatColor.RED + "Qukkiz is not running.");
             }
 
             return true;

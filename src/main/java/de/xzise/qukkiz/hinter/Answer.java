@@ -15,14 +15,4 @@ public class Answer {
         this.answer = answer;
         this.player = player;
     }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof Answer) {
-            return this.player.equals(((Answer) o).player);
-        } else {
-            return false;
-        }
-    }
-
 }

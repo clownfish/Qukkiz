@@ -54,7 +54,7 @@ public class EnableCommand extends CommonHelpableSubCommand {
                         sender.sendMessage("Qukkiz is now " + ChatColor.GREEN + "disabled" + ChatColor.WHITE + ".");
                     }
                 } else {
-                    sender.sendMessage(ChatColor.RED + "Trivia is not running at the moment");
+                    sender.sendMessage(ChatColor.RED + "Qukkiz is not running at the moment");
                 }
             } else {
                 sender.sendMessage(ChatColor.RED + "You have not the permission to play Qukkiz.");

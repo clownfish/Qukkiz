@@ -1,7 +1,9 @@
 package de.xzise.qukkiz.questioner;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.bukkit.entity.Player;
 
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
@@ -9,7 +11,7 @@ import de.xzise.qukkiz.questions.QuestionInterface;
 
 public class BestGuessQuestioner implements Questioner {
 
-    private final Set<Answer> answers = new HashSet<Answer>();
+    private final Map<Player, Answer> answers = new HashMap<Player, Answer>();
     private final Hinter<?> hinter;
     private final QuestionInterface question;
     private final boolean cancelIfCorrect;
@@ -35,8 +37,7 @@ public class BestGuessQuestioner implements Questioner {
     public AnswerResult putAnswer(Answer answer) {
         Integer delta = this.getQuestion().testAnswer(answer.answer);
         if (delta != null) {
-            this.answers.remove(answer);
-            this.answers.add(answer);
+            this.answers.put(answer.player, answer);
             if (delta == 0 && this.cancelIfCorrect) {
                 return AnswerResult.CORRECT;
             }
@@ -48,9 +49,15 @@ public class BestGuessQuestioner implements Questioner {
 
     @Override
     public Answer getBestAnswer() {
+        System.out.println("get best #2");
+        for (Answer answer : this.answers.values()) {
+            System.out.println("Answer: " + answer.answer + " by " + answer.player + " after " + answer.time + " ms and " + answer.hint + " hints");
+        }
+        
+        
         Answer bestAnswer = null;
         Integer bestDelta = null;
-        for (Answer answer : this.answers) {
+        for (Answer answer : this.answers.values()) {
             Integer delta = this.getQuestion().testAnswer(answer.answer);
             if (delta != null && delta != Integer.MAX_VALUE && delta != Integer.MIN_VALUE && (bestDelta == null || Math.abs(delta) < Math.abs(bestDelta)) && (bestAnswer == null || bestAnswer.time > answer.time)) {
                 bestAnswer = answer;
