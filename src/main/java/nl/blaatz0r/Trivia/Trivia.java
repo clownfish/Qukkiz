@@ -50,6 +50,7 @@ import de.xzise.qukkiz.reward.ItemsReward;
 import de.xzise.qukkiz.reward.PointsReward;
 import de.xzise.qukkiz.reward.Reward;
 import de.xzise.qukkiz.reward.RewardSettings;
+import de.xzise.wrappers.economy.EconomyHandler;
 
 /**
  * Trivia for Bukkit Trivia is quiz game where players can answer questions by
@@ -76,7 +77,7 @@ public class Trivia extends JavaPlugin {
     private boolean triviaRunning;
 
     // Qukkiz additions
-    private List<QuestionInterface> questions;
+    private List<QuestionInterface> questions = new ArrayList<QuestionInterface>();
     private Questioner questioner;
     private CommandMap commands;
     private QukkizUsers users;
@@ -88,6 +89,7 @@ public class Trivia extends JavaPlugin {
     private Map<Player, Answer> answers = new HashMap<Player, Answer>();
     
     private CoinsReward coinReward;
+    private EconomyHandler economyHandler;
 
     public static PermissionWrapper wrapper = new PermissionWrapper();
     public static XLogger logger;
@@ -107,17 +109,15 @@ public class Trivia extends JavaPlugin {
         this.settings = new QukkizSettings(this.getDataFolder());
         this.name = this.getDescription().getName();
         this.version = this.getDescription().getVersion();
-        this.commands = new CommandMap(this);
+        this.commands = new CommandMap(this, this.settings);
         this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"), this.getServer());
         this.users.readFile();
 
+        this.economyHandler = new EconomyHandler(this.getServer().getPluginManager(), this.settings.economyPluginName, this.settings.economyBaseName, logger);
+        
         this.db = new Database();
         db.connect(this.settings.database);
         db.init();
-
-        // Read trivia question files (only once)
-        this.questions = new ArrayList<QuestionInterface>();
-        this.loadQuestions();
 
         // React on plugin enable/disable
         ServerListener serverListener = new ServerListener() {
@@ -126,10 +126,8 @@ public class Trivia extends JavaPlugin {
                 String name = event.getPlugin().getDescription().getName();
                 if (name.equals("Permissions")) {
                     Trivia.wrapper.init(event.getPlugin());
-                } else if (name.equals("iConomy")) {
-                    if (Trivia.this.coinReward != null) {
-                        Trivia.this.coinReward.setEconomy(event.getPlugin());
-                    }
+                } else {
+                    Trivia.this.economyHandler.init(event.getPlugin());
                 }
             }
 
@@ -138,10 +136,8 @@ public class Trivia extends JavaPlugin {
                 String name = event.getPlugin().getDescription().getName();
                 if (name.equals("Permissions")) {
                     Trivia.wrapper.init(null);
-                } else if (name.equals("iConomy")) {
-                    if (Trivia.this.coinReward != null) {
-                        Trivia.this.coinReward.setEconomy(null);
-                    }
+                } else {
+                    Trivia.this.economyHandler.unload(event.getPlugin());
                 }
             }
         };
@@ -200,7 +196,7 @@ public class Trivia extends JavaPlugin {
             }
             if (this.settings.coinsReward != null) {
                 this.coinReward = new CoinsReward(this.settings.coinsReward);
-                this.coinReward.setEconomy(this.getServer().getPluginManager().getPlugin("iConomy"));
+                this.coinReward.setEconomyHandler(this.economyHandler);
                 this.rewards.add(this.coinReward);
             }
 

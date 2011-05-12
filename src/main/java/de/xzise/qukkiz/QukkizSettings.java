@@ -24,6 +24,7 @@ public class QukkizSettings {
     public File[] questionfiles;
     public int questionsDelay;
     public boolean revealAnswer;
+    public double voteRatio;
     
     public IntHinterSettings intHinter;
     public WordHinterSettings wordHinter;
@@ -35,6 +36,8 @@ public class QukkizSettings {
     
     public boolean optInEnabled;
     public boolean startOnEnable;
+    public String economyPluginName;
+    public String economyBaseName;
     
     public QukkizSettings(File dataPath) {
         this.loadSettings(dataPath);
@@ -50,9 +53,12 @@ public class QukkizSettings {
             config.setProperty("questions.reveal", true);
             config.setProperty("questions.hints.delay", 15);
             config.setProperty("questions.hints.count", 3);
+            config.setProperty("questions.vote.ratio", 0.5);
             config.setProperty("ranking.database", "qukkiz.db");
             config.setProperty("start.onEnable", true);
             config.setProperty("start.optIn", true);
+            config.setProperty("economy.plugin", "");
+            config.setProperty("economy.base", "");
             config.save();
         } else {
             config.load();
@@ -66,15 +72,12 @@ public class QukkizSettings {
         this.questionfiles = convert(config.getStringList("questions.files", new ArrayList<String>(0)), dataPath);
         this.questionsDelay = config.getInt("questions.delay", 5);
         this.revealAnswer = config.getBoolean("questions.reveal", true);
+        this.voteRatio = config.getDouble("questions.vote.ratio", 0.5);
         
-        ConfigurationNode hintsNode = config.getNode("questions.hints");
-        if (hintsNode != null) {
-            this.hintCount = hintsNode.getInt("count", 3);
-            this.hintDelay = hintsNode.getInt("delay", 15);
-        } else {
-            this.hintCount = 3;
-            this.hintDelay = 15;
-        }
+        ConfigurationNode hintsNode = getNode(config, "questions.hints");
+        
+        this.hintCount = hintsNode.getInt("count", 3);
+        this.hintDelay = hintsNode.getInt("delay", 15);
         
         this.intHinter = new IntHinterSettings(hintsNode);
         this.wordHinter = new WordHinterSettings(hintsNode);
@@ -83,7 +86,15 @@ public class QukkizSettings {
         this.optInEnabled = config.getBoolean("start.optIn", true);
         this.startOnEnable = config.getBoolean("start.onEnable", true);
         
+        this.economyBaseName = config.getString("economy.base", "");
+        this.economyPluginName = config.getString("economy.plugin", "");
+        
         this.database = new File(dataPath, config.getString("ranking.database", "qukkiz.db"));
+    }
+    
+    private static ConfigurationNode getNode(ConfigurationNode node, String nodeName) {
+        ConfigurationNode subNode = node.getNode(nodeName);
+        return subNode == null ? Configuration.getEmptyNode() : subNode; 
     }
     
     private static File[] convert(List<String> list, File dataPath) {

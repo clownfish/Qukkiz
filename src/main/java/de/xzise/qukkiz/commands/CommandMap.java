@@ -9,10 +9,11 @@ import de.xzise.commands.CommonCommandMap;
 import de.xzise.commands.CommonHelpCommand;
 import de.xzise.commands.HelpCommand;
 import de.xzise.commands.SubCommand;
+import de.xzise.qukkiz.QukkizSettings;
 
 public class CommandMap extends CommonCommandMap {
     
-    public CommandMap(Trivia plugin) {
+    public CommandMap(Trivia plugin, QukkizSettings settings) {
         super();
         
         HelpCommand helper = new CommonHelpCommand("Qukkiz");
@@ -24,7 +25,7 @@ public class CommandMap extends CommonCommandMap {
         commands.add(helper);
         commands.add(new RankCommand(plugin));
         commands.add(new LeaderCommand(plugin));
-        commands.add(new VoteNextCommand(plugin));
+        commands.add(new VoteNextCommand(plugin, settings));
         commands.add(new StoreCommand(plugin));
         commands.add(new HintCommand(plugin));
         commands.add(new LoadCommand(plugin));

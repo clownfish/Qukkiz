@@ -1,10 +1,13 @@
 package de.xzise.qukkiz.questioner;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.bukkit.entity.Player;
 
+import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.questions.QuestionInterface;
@@ -49,22 +52,30 @@ public class BestGuessQuestioner implements Questioner {
 
     @Override
     public Answer getBestAnswer() {
-        System.out.println("get best #2");
-        for (Answer answer : this.answers.values()) {
-            System.out.println("Answer: " + answer.answer + " by " + answer.player + " after " + answer.time + " ms and " + answer.hint + " hints");
-        }
-        
-        
-        Answer bestAnswer = null;
-        Integer bestDelta = null;
+        List<Answer> possibleAnswers = new ArrayList<Answer>(this.answers.size());
+        int bestDelta = 0;
         for (Answer answer : this.answers.values()) {
             Integer delta = this.getQuestion().testAnswer(answer.answer);
-            if (delta != null && delta != Integer.MAX_VALUE && delta != Integer.MIN_VALUE && (bestDelta == null || Math.abs(delta) < Math.abs(bestDelta)) && (bestAnswer == null || bestAnswer.time > answer.time)) {
-                bestAnswer = answer;
-                bestDelta = delta;
+            // Answer has to be at least valid
+            if (delta != null && delta != Integer.MAX_VALUE && delta != Integer.MIN_VALUE) {
+                if (possibleAnswers.size() == 0) {
+                    possibleAnswers.add(answer);
+                    bestDelta = Math.abs(delta);
+                } else {
+                    delta = Math.abs(delta);
+                    // All answers should have the same delta & time
+                    Answer reference = possibleAnswers.get(0);
+                    if (delta < bestDelta || (delta == bestDelta && answer.time < reference.time)) {
+                        possibleAnswers.clear();
+                        possibleAnswers.add(answer);
+                        bestDelta = delta;
+                    } else if (delta == bestDelta && answer.time == reference.time) {
+                        possibleAnswers.add(answer);
+                    }
+                }
             }
         }
-        return bestAnswer;
+        return MinecraftUtil.getRandom(possibleAnswers);
     }
 
 }

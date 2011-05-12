@@ -1,43 +1,32 @@
 package de.xzise.qukkiz.reward;
 
-import nl.blaatz0r.Trivia.Trivia;
-
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.Plugin;
-
-import com.nijiko.coelho.iConomy.iConomy;
-import com.nijiko.coelho.iConomy.system.Bank;
 
 import de.xzise.qukkiz.hinter.Answer;
+import de.xzise.wrappers.economy.EconomyHandler;
 
 public class CoinsReward implements Reward<CoinsRewardSettings> {
 
     private int start;
     private int decrease;
-    private Bank bank;
+    private EconomyHandler economyHandler;
 
     public CoinsReward(CoinsRewardSettings settings) {
         this.setSettings(settings);
     }
 
-    public void setEconomy(Plugin plugin) {
-        if (plugin instanceof iConomy) {
-            this.bank = iConomy.getBank();
-            Trivia.logger.info("iConomy found and CoinsReward is enabled.");
-        } else {
-            this.bank = null;
-            Trivia.logger.info("iConomy not found and CoinsRewards is disabled.");
-        }
+    public void setEconomyHandler(EconomyHandler handler) {
+        this.economyHandler = handler;
     }
 
     @Override
     public void reward(Answer answer) {
-        if (bank != null) {
+        if (this.economyHandler != null) {
             int rewarded = this.start - answer.hint * this.decrease;
-            this.bank.getAccount(answer.player.getName()).add(rewarded);
-            answer.player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + this.bank.format(rewarded) + ChatColor.WHITE + ".");
+            this.economyHandler.pay(answer.player, -rewarded);
+            answer.player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + this.economyHandler.format(rewarded) + ChatColor.WHITE + ".");
         } else {
-            answer.player.sendMessage(ChatColor.RED + "You should have rewarded coins, but no iConomy there.");
+            answer.player.sendMessage(ChatColor.RED + "You should have rewarded coins, but no economy there.");
             // TODO: Tell logger?
         }
     }

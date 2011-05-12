@@ -7,15 +7,18 @@ import org.bukkit.command.CommandSender;
 
 import de.xzise.MinecraftUtil;
 import de.xzise.commands.CommonHelpableSubCommand;
+import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 
 public class VoteNextCommand extends CommonHelpableSubCommand {
 
     private final Trivia plugin;
+    private final QukkizSettings settings;
 
-    public VoteNextCommand(Trivia plugin) {
+    public VoteNextCommand(Trivia plugin, QukkizSettings settings) {
         super("vote", "votenext");
         this.plugin = plugin;
+        this.settings = settings;
     }
 
     @Override
@@ -44,7 +47,7 @@ public class VoteNextCommand extends CommonHelpableSubCommand {
                 } else {
                     if (!this.plugin.voted.isEmpty() || Trivia.wrapper.permission(sender, PermissionTypes.START_VOTE)) {
                         this.plugin.voted.add(sender);
-                        double limit = ((double) plugin.getUsers().getActives().size() / 2.0);
+                        double limit = this.plugin.getUsers().getActives().size() * this.settings.voteRatio;
                         if (plugin.voted.size() > limit) {
                             plugin.nextQuestion();
                             this.plugin.getUsers().sendMessage(ChatColor.BLUE + "Vote succeeded!");
