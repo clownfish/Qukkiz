@@ -21,7 +21,7 @@ public class CoinsReward implements Reward<CoinsRewardSettings> {
 
     @Override
     public void reward(Answer answer) {
-        if (this.economyHandler != null) {
+        if (this.economyHandler != null && this.economyHandler.isActive()) {
             int rewarded = this.start - answer.hint * this.decrease;
             this.economyHandler.pay(answer.player, -rewarded);
             answer.player.sendMessage(ChatColor.WHITE + "You awarded " + ChatColor.GREEN + this.economyHandler.format(rewarded) + ChatColor.WHITE + ".");
