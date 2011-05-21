@@ -16,7 +16,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.xzise.MinecraftUtil;
-import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 
 public class QukkizUsers {
 

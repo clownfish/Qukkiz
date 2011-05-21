@@ -8,7 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import de.xzise.commands.CommonHelpableSubCommand;
-import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
+import de.xzise.qukkiz.PermissionTypes;
 
 public class LoadCommand extends CommonHelpableSubCommand {
 

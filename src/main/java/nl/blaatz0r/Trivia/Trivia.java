@@ -33,10 +33,9 @@ import org.bukkit.plugin.PluginManager;
 import de.xzise.MinecraftUtil;
 import de.xzise.NullaryCommandSender;
 import de.xzise.XLogger;
-import de.xzise.qukkiz.PermissionWrapper;
+import de.xzise.qukkiz.PermissionTypes;
 import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.QukkizUsers;
-import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 import de.xzise.qukkiz.commands.CommandMap;
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.questioner.Questioner;
@@ -51,6 +50,7 @@ import de.xzise.qukkiz.reward.PointsReward;
 import de.xzise.qukkiz.reward.Reward;
 import de.xzise.qukkiz.reward.RewardSettings;
 import de.xzise.wrappers.economy.EconomyHandler;
+import de.xzise.wrappers.permissions.PermissionsHandler;
 
 /**
  * Trivia for Bukkit Trivia is quiz game where players can answer questions by
@@ -90,8 +90,9 @@ public class Trivia extends JavaPlugin {
     
     private CoinsReward coinReward;
     private EconomyHandler economyHandler;
+    private PermissionsHandler permissionsHandler;
 
-    public static PermissionWrapper wrapper = new PermissionWrapper();
+    public static PermissionsHandler wrapper;
     public static XLogger logger;
 
     // DEFAULT PLUGIN FUNCTIONS
@@ -107,13 +108,16 @@ public class Trivia extends JavaPlugin {
         this.getDataFolder().mkdir();
 
         this.settings = new QukkizSettings(this.getDataFolder());
+        
+        this.economyHandler = new EconomyHandler(this.getServer().getPluginManager(), this.settings.economyPluginName, this.settings.economyBaseName, logger);
+        this.permissionsHandler = new PermissionsHandler(this.getServer().getPluginManager(), "", logger);
+        Trivia.wrapper = this.permissionsHandler;
+        
         this.name = this.getDescription().getName();
         this.version = this.getDescription().getVersion();
         this.commands = new CommandMap(this, this.settings);
         this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"), this.getServer());
         this.users.readFile();
-
-        this.economyHandler = new EconomyHandler(this.getServer().getPluginManager(), this.settings.economyPluginName, this.settings.economyBaseName, logger);
         
         this.db = new Database();
         db.connect(this.settings.database);
@@ -123,27 +127,20 @@ public class Trivia extends JavaPlugin {
         ServerListener serverListener = new ServerListener() {
             @Override
             public void onPluginEnable(PluginEnableEvent event) {
-                String name = event.getPlugin().getDescription().getName();
-                if (name.equals("Permissions")) {
-                    Trivia.wrapper.init(event.getPlugin());
-                } else {
-                    Trivia.this.economyHandler.init(event.getPlugin());
-                }
+                Trivia.this.permissionsHandler.load(event.getPlugin());
+                Trivia.this.economyHandler.load(event.getPlugin());
             }
 
             @Override
             public void onPluginDisable(PluginDisableEvent event) {
-                String name = event.getPlugin().getDescription().getName();
-                if (name.equals("Permissions")) {
-                    Trivia.wrapper.init(null);
-                } else {
-                    Trivia.this.economyHandler.unload(event.getPlugin());
-                }
+                Trivia.this.permissionsHandler.unload(event.getPlugin());
+                Trivia.this.economyHandler.unload(event.getPlugin());
             }
         };
 
         // Test all plugins once!
-        Trivia.wrapper.init(this.getServer().getPluginManager().getPlugin("Permissions"));
+        this.permissionsHandler.load();
+        this.economyHandler.load();
 
         PlayerListener playerListener = new TriviaPlayerListener(this, this.users);
 

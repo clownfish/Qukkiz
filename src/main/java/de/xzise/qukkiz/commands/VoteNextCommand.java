@@ -7,8 +7,8 @@ import org.bukkit.command.CommandSender;
 
 import de.xzise.MinecraftUtil;
 import de.xzise.commands.CommonHelpableSubCommand;
+import de.xzise.qukkiz.PermissionTypes;
 import de.xzise.qukkiz.QukkizSettings;
-import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
 
 public class VoteNextCommand extends CommonHelpableSubCommand {
 

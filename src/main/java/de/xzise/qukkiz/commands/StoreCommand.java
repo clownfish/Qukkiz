@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.xzise.commands.CommonHelpableSubCommand;
-import de.xzise.qukkiz.PermissionWrapper.PermissionTypes;
+import de.xzise.qukkiz.PermissionTypes;
 
 public class StoreCommand extends CommonHelpableSubCommand {
 
