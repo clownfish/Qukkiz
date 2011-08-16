@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.blaatz0r.Trivia.Trivia;
+
 import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationNode;
 
@@ -16,29 +18,33 @@ import de.xzise.qukkiz.reward.PointsRewardSettings;
 import de.xzise.qukkiz.reward.RewardSettings;
 
 public class QukkizSettings {
-    
+
+    public enum AnswerMode { COMMAND, CHAT, BOTH }
+
     public CoinsRewardSettings coinsReward;
     public ItemsRewardSettings itemsReward;
     public PointsRewardSettings pointsReward;
-    
+
     public File[] questionfiles;
     public int questionsDelay;
     public boolean revealAnswer;
     public double voteRatio;
-    
+    public AnswerMode answerMode;
+
     public IntHinterSettings intHinter;
     public WordHinterSettings wordHinter;
     public ChoiceHinterSettings choiceHinter;
     public int hintCount;
     public int hintDelay;
-    
+
     public File database;
-    
+
     public boolean optInEnabled;
     public boolean startOnEnable;
     public String economyPluginName;
     public String economyBaseName;
-    
+    public String permissionsPluginName;
+
     public QukkizSettings(File dataPath) {
         this.loadSettings(dataPath);
     }
@@ -54,11 +60,13 @@ public class QukkizSettings {
             config.setProperty("questions.hints.delay", 15);
             config.setProperty("questions.hints.count", 3);
             config.setProperty("questions.vote.ratio", 0.5);
+            config.setProperty("questions.answer", "both");
             config.setProperty("ranking.database", "qukkiz.db");
             config.setProperty("start.onEnable", true);
             config.setProperty("start.optIn", true);
             config.setProperty("economy.plugin", "");
             config.setProperty("economy.base", "");
+            config.setProperty("permissions.plugin", "");
             config.save();
         } else {
             config.load();
@@ -73,6 +81,17 @@ public class QukkizSettings {
         this.questionsDelay = config.getInt("questions.delay", 5);
         this.revealAnswer = config.getBoolean("questions.reveal", true);
         this.voteRatio = config.getDouble("questions.vote.ratio", 0.5);
+        String answerModeText = config.getString("questions.answer.mode", "both");
+        if (answerModeText.equalsIgnoreCase("command")) {
+            this.answerMode = AnswerMode.COMMAND;
+        } else if (answerModeText.equalsIgnoreCase("chat")) {
+            this.answerMode = AnswerMode.CHAT;
+        } else {
+            this.answerMode = AnswerMode.BOTH;
+            if (!answerModeText.equalsIgnoreCase("both")) {
+                Trivia.logger.info("Unknown answer mode set ('" + answerModeText + "'). Default to both.");
+            }
+        }
         
         ConfigurationNode hintsNode = getNode(config, "questions.hints");
         
@@ -88,6 +107,7 @@ public class QukkizSettings {
         
         this.economyBaseName = config.getString("economy.base", "");
         this.economyPluginName = config.getString("economy.plugin", "");
+        this.permissionsPluginName = config.getString("permissions.plugin", "");
         
         this.database = new File(dataPath, config.getString("ranking.database", "qukkiz.db"));
     }

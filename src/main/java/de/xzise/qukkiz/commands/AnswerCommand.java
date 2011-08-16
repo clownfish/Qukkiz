@@ -36,12 +36,15 @@ public class AnswerCommand extends CommonHelpableSubCommand {
     public boolean execute(CommandSender sender, String[] parameters) {
         if (sender instanceof Player) {
             if (parameters.length >= 2) {
-                String answer = parameters[1];
-                for (int i = 2; i < parameters.length; i++) {
-                    answer += " " + parameters[i];
+                if (this.plugin.isCommandModeAllowed()) {
+                    String answer = parameters[1];
+                    for (int i = 2; i < parameters.length; i++) {
+                        answer += " " + parameters[i];
+                    }
+                    this.plugin.answerQuestion(answer, (Player) sender, true);
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Answering questions via command isn't allowed here.");
                 }
-                // TODO: Answer here
-                this.plugin.answerQuestion(answer, (Player) sender);
                 return true;
             } else {
                 return false;

@@ -39,7 +39,7 @@ public class VoteNextCommand extends CommonHelpableSubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] parameters) {
         if (parameters.length == 1) {
-            if (this.plugin.triviaEnabled(sender) && plugin.isRunning()) {
+            if (this.plugin.getUsers().isPlaying(sender) && this.plugin.isRunning()) {
                 if (!Trivia.wrapper.permission(sender, PermissionTypes.VOTE)) {
                     sender.sendMessage(ChatColor.RED + "You don't have permissions to vote.");
                 } else if (this.plugin.voted.contains(sender)) {
@@ -48,8 +48,8 @@ public class VoteNextCommand extends CommonHelpableSubCommand {
                     if (!this.plugin.voted.isEmpty() || Trivia.wrapper.permission(sender, PermissionTypes.START_VOTE)) {
                         this.plugin.voted.add(sender);
                         double limit = this.plugin.getUsers().getActives().size() * this.settings.voteRatio;
-                        if (plugin.voted.size() > limit) {
-                            plugin.nextQuestion();
+                        if (this.plugin.voted.size() > limit) {
+                            this.plugin.nextQuestion();
                             this.plugin.getUsers().sendMessage(ChatColor.BLUE + "Vote succeeded!");
                         } else {
                             this.plugin.getUsers().sendMessage(sender, ChatColor.GREEN + MinecraftUtil.getName(sender) + ChatColor.WHITE + " voted for the next question. [" + ChatColor.GREEN + plugin.voted.size() + "/" + (int) (Math.ceil(limit) + 1) + ChatColor.WHITE + "].");

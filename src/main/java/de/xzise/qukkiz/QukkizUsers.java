@@ -168,8 +168,12 @@ public class QukkizUsers {
         this.running = true;
         this.readFile();
     }
-    
+
     public void stop() {
         this.running = false;
+    }
+
+    public boolean isPlaying(CommandSender sender) {
+        return this.getActives().contains(sender);
     }
 }

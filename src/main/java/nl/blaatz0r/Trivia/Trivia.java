@@ -35,6 +35,7 @@ import de.xzise.NullaryCommandSender;
 import de.xzise.XLogger;
 import de.xzise.qukkiz.PermissionTypes;
 import de.xzise.qukkiz.QukkizSettings;
+import de.xzise.qukkiz.QukkizSettings.AnswerMode;
 import de.xzise.qukkiz.QukkizUsers;
 import de.xzise.qukkiz.commands.CommandMap;
 import de.xzise.qukkiz.hinter.Answer;
@@ -65,7 +66,7 @@ import de.xzise.wrappers.permissions.PermissionsHandler;
 public class Trivia extends JavaPlugin {
 
     public static final String[] grats = { "Nice! ", "Congratulations! ", "Woop! ", "Bingo! ", "Zing! ", "Huzzah! ", "Grats! ", "Who's the man?! ", "YEAHH! ", "Well done! " };
-    
+
     public String name;
     public String version;
 
@@ -87,7 +88,7 @@ public class Trivia extends JavaPlugin {
     private TimerTask task;
 
     private Map<Player, Answer> answers = new HashMap<Player, Answer>();
-    
+
     private CoinsReward coinReward;
     private EconomyHandler economyHandler;
     private PermissionsHandler permissionsHandler;
@@ -108,17 +109,17 @@ public class Trivia extends JavaPlugin {
         this.getDataFolder().mkdir();
 
         this.settings = new QukkizSettings(this.getDataFolder());
-        
+
         this.economyHandler = new EconomyHandler(this.getServer().getPluginManager(), this.settings.economyPluginName, this.settings.economyBaseName, logger);
-        this.permissionsHandler = new PermissionsHandler(this.getServer().getPluginManager(), "", logger);
+        this.permissionsHandler = new PermissionsHandler(this.getServer().getPluginManager(), this.settings.permissionsPluginName, logger);
         Trivia.wrapper = this.permissionsHandler;
-        
+
         this.name = this.getDescription().getName();
         this.version = this.getDescription().getVersion();
         this.commands = new CommandMap(this, this.settings);
         this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"), this.getServer());
         this.users.readFile();
-        
+
         this.db = new Database();
         db.connect(this.settings.database);
         db.init();
@@ -168,6 +169,9 @@ public class Trivia extends JavaPlugin {
 
     public void startTrivia() {
         this.settings.loadSettings(this.getDataFolder());
+        this.economyHandler.reloadConfig(this.settings.economyPluginName, this.settings.economyBaseName);
+        this.permissionsHandler.setPluginName(this.settings.permissionsPluginName);
+        this.permissionsHandler.load();
         this.users.setOptInEnable(this.settings.optInEnabled);
         this.loadQuestions();
 
@@ -201,7 +205,7 @@ public class Trivia extends JavaPlugin {
 
             this.users.run();
             this.users.sendMessage(ChatColor.GREEN + "Qukkiz has started! \\o/");
-            
+
             nextQuestion();
         } else {
             Trivia.logger.warning("No questions were loaded!");
@@ -304,7 +308,7 @@ public class Trivia extends JavaPlugin {
             this.startHintTimer();
         }
     }
-    
+
     private void noAnswer() {
         String result = ChatColor.RED + "Nobody" + ChatColor.WHITE + " got it right.";
         if (this.settings.revealAnswer) {
@@ -366,7 +370,7 @@ public class Trivia extends JavaPlugin {
 
     public List<QuestionInterface> parseTriviaQuestions(List<String> triviaQuestions) {
         List<QuestionInterface> result = new ArrayList<QuestionInterface>(triviaQuestions.size());
-        
+
         for (String string : triviaQuestions) {
             if (!string.isEmpty()) {
                 int comment = string.indexOf('#');
@@ -426,7 +430,7 @@ public class Trivia extends JavaPlugin {
     }
 
     public boolean triviaEnabled(CommandSender p) {
-        return this.users.getActives().contains(p);
+        return this.users.isPlaying(p);
     }
 
     public List<String> readLines(File f) throws IOException {
@@ -445,7 +449,7 @@ public class Trivia extends JavaPlugin {
     }
 
     public boolean permission(CommandSender sender, PermissionTypes defaultPermission, PermissionTypes adminPermission) {
-        return (Trivia.wrapper.permission(sender, defaultPermission) && this.triviaEnabled(sender)) || Trivia.wrapper.permission(sender, adminPermission);
+        return (Trivia.wrapper.permission(sender, defaultPermission) && this.users.isPlaying(sender)) || Trivia.wrapper.permission(sender, adminPermission);
     }
 
     // MESSAGES
@@ -490,7 +494,7 @@ public class Trivia extends JavaPlugin {
                     nameColor = ChatColor.BLUE;
                 }
                 switch (i) {
-                case 1 :
+                case 1:
                     rankColor = ChatColor.GOLD;
                     break;
                 case 2:
@@ -537,23 +541,35 @@ public class Trivia extends JavaPlugin {
 
     }
 
-    public boolean answerQuestion(String answer, Player player) {
-        if (this.canAnswer) {
+    public boolean answerQuestion(String answer, Player player, boolean printWrongAnswer) {
+        if (this.users.isPlaying(player) && this.canAnswer) {
             switch (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, this.hints, answer, player))) {
-            case CORRECT :
+            case CORRECT:
                 this.proposeWinner();
                 return true;
-            case VALID :
+            case VALID:
                 player.sendMessage("Qukkiz recognized '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' as your answer.");
-            case INVALID :
+                return false;
+            case INVALID:
+                if (printWrongAnswer) {
+                    player.sendMessage("The answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' is wrong. Sorry.");
+                }
                 return false;
             }
-            return false;            
+            return false;
         } else {
             return false;
         }
     }
-    
+
+    public boolean isCommandModeAllowed() {
+        return this.settings.answerMode == AnswerMode.COMMAND || this.settings.answerMode == AnswerMode.BOTH;
+    }
+
+    public boolean isChatModeAllowed() {
+        return this.settings.answerMode == AnswerMode.CHAT || this.settings.answerMode == AnswerMode.BOTH;
+    }
+
     private void proposeWinner(Answer answer) {
         this.canAnswer = false;
 
@@ -565,7 +581,7 @@ public class Trivia extends JavaPlugin {
         this.reward(answer);
         this.nextQuestion();
     }
-    
+
     private void proposeWinner() {
         Answer a = this.questioner.getBestAnswer();
         if (a == null) {

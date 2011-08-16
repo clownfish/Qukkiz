@@ -5,6 +5,7 @@ import org.bukkit.inventory.ItemStack;
 
 import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.hinter.Answer;
+import de.xzise.qukkiz.reward.ItemsRewardSettings.ItemData;
 
 public class ItemsReward implements Reward<ItemsRewardSettings> {
     
@@ -16,11 +17,14 @@ public class ItemsReward implements Reward<ItemsRewardSettings> {
 
     @Override
     public void reward(Answer answer) {
-        ItemStack stack = MinecraftUtil.getRandom(this.settings.items).create(1);
-        if (answer.player.getInventory().addItem(stack).isEmpty()) {
-            answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item!");
-        } else {
-            answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item, but " + ChatColor.GREEN + "no empty" + ChatColor.WHITE + " slot!");
+        ItemData data = MinecraftUtil.getRandom(this.settings.items);
+        if (data != null) {
+            ItemStack stack = data.create(1);
+            if (answer.player.getInventory().addItem(stack).isEmpty()) {
+                answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item!");
+            } else {
+                answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item, but " + ChatColor.GREEN + "no empty" + ChatColor.WHITE + " slot!");
+            }
         }
     }
 

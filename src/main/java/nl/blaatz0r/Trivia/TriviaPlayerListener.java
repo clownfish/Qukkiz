@@ -10,36 +10,36 @@ import de.xzise.qukkiz.QukkizUsers;
 
 /**
  * Handle events for all Player related events
+ * 
  * @author blaatz0r
  */
 public class TriviaPlayerListener extends PlayerListener {
-    
+
     private final Trivia plugin;
     private final QukkizUsers users;
-    
+
     public TriviaPlayerListener(Trivia instance, QukkizUsers users) {
         super();
-        plugin = instance;
+        this.plugin = instance;
         this.users = users;
     }
-    
+
     @Override
     public void onPlayerChat(PlayerChatEvent event) {
-    	String msg = event.getMessage();
-    	Player player = event.getPlayer();
-    	if((!event.isCancelled()) && plugin.triviaEnabled(player) && plugin.answerQuestion(msg, player)) {
-    	    event.setCancelled(true);
-    	}
+        String msg = event.getMessage();
+        Player player = event.getPlayer();
+        if ((!event.isCancelled()) && this.plugin.isChatModeAllowed() && this.plugin.answerQuestion(msg, player, false)) {
+            event.setCancelled(true);
+        }
     }
-    
+
     @Override
     public void onPlayerQuit(PlayerQuitEvent event) {
         this.users.quit(event.getPlayer());
     }
-    
+
     @Override
     public void onPlayerJoin(PlayerJoinEvent event) {
         this.users.join(event.getPlayer());
     }
 }
-
