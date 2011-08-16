@@ -1,31 +1,36 @@
 package de.xzise.qukkiz;
 
-import de.xzise.wrappers.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 
-public enum PermissionTypes implements Permission<Boolean> {
+import de.xzise.wrappers.permissions.Permission;
+import de.xzise.wrappers.permissions.SuperPerm;
+
+public enum PermissionTypes implements Permission<Boolean>, SuperPerm {
     // Always possible
-    ADMIN_NEXT("trivia.admin.next", false),
-    ADMIN_HINT("trivia.admin.hint", false),
-    ADMIN_START("trivia.admin.start", false),
-    ADMIN_STOP("trivia.admin.stop", false),
-    ADMIN_LOAD_RE("triva.admin.reload", false),
-    ADMIN_LOAD_ADD("trivia.load.add", false),
+    ADMIN_NEXT("qukkiz.admin.next", false, "Allows you to force the next question."),
+    ADMIN_HINT("qukkiz.admin.hint", false, "Allows you to force the next hint."),
+    ADMIN_START("qukkiz.admin.start", false, "Allows you to start qukkiz."),
+    ADMIN_STOP("qukkiz.admin.stop", false, "Allows you to stop qukkiz."),
+    ADMIN_LOAD_RE("triva.admin.reload", false, "Allows you to reload the questions."),
+    ADMIN_LOAD_ADD("qukkiz.load.add", false, "Allows you to load new files."),
     
     // Only while running
-    NEXT("trivia.next", false),
-    HINT("trivia.hint", false),
+    NEXT("qukkiz.next", false, "Allows you to force the next question, if you enabled qukkiz for you."),
+    HINT("qukkiz.hint", false, "Allows you to force the next hint, if you enabled qukkiz for you."),
     
-    VOTE("trivia.vote", true),
-    START_VOTE("trivia.startvote", true),
+    VOTE("qukkiz.vote", true, "Allows you to participate in the vote."),
+    START_VOTE("qukkiz.startvote", true, "Allows you to start a new vote."),
     
-    PLAY("trivia.play", true);
+    PLAY("qukkiz.play", true, "Allows you to play qukkiz.");
 
     public final String name;
     public final boolean def;
+    public final String description;
     
-    private PermissionTypes(String name, boolean def) {
+    private PermissionTypes(String name, boolean def, String description) {
         this.name = name;
         this.def = def;
+        this.description = description;
     }
 
     public static PermissionTypes getType(String name) {
@@ -45,5 +50,15 @@ public enum PermissionTypes implements Permission<Boolean> {
     @Override
     public Boolean getDefault() {
         return this.def;
+    }
+
+    @Override
+    public String getDescription() {
+        return this.description;
+    }
+
+    @Override
+    public PermissionDefault getPermissionDefault() {
+        return this.def ? PermissionDefault.TRUE : PermissionDefault.OP;
     }
 }

@@ -99,12 +99,9 @@ public class Trivia extends JavaPlugin {
     // DEFAULT PLUGIN FUNCTIONS
 
     public void onEnable() {
-        try {
-            logger = new XLogger(this);
-        } catch (NoSuchMethodError nsme) {
-            logger = new XLogger("Minecraft", "Qukkiz");
-            logger.warning("Using old constructor!");
-        }
+        logger = new XLogger(this);
+
+        MinecraftUtil.register(this.getServer().getPluginManager(), logger, PermissionTypes.values());
 
         this.getDataFolder().mkdir();
 
@@ -121,8 +118,8 @@ public class Trivia extends JavaPlugin {
         this.users.readFile();
 
         this.db = new Database();
-        db.connect(this.settings.database);
-        db.init();
+        this.db.connect(this.settings.database);
+        this.db.init();
 
         // React on plugin enable/disable
         ServerListener serverListener = new ServerListener() {
@@ -156,7 +153,7 @@ public class Trivia extends JavaPlugin {
         if (this.settings.startOnEnable) {
             this.startTrivia();
         }
-        logger.info(name + " " + version + " enabled");
+        logger.enableMsg();
     }
 
     public QukkizUsers getUsers() {

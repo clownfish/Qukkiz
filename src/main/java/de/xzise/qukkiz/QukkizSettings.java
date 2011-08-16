@@ -60,7 +60,7 @@ public class QukkizSettings {
             config.setProperty("questions.hints.delay", 15);
             config.setProperty("questions.hints.count", 3);
             config.setProperty("questions.vote.ratio", 0.5);
-            config.setProperty("questions.answer", "both");
+            config.setProperty("questions.answer.mode", "both");
             config.setProperty("ranking.database", "qukkiz.db");
             config.setProperty("start.onEnable", true);
             config.setProperty("start.optIn", true);
