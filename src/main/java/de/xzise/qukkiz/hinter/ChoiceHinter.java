@@ -1,33 +1,26 @@
 package de.xzise.qukkiz.hinter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 public class ChoiceHinter extends DefaultHinter<ChoiceHinterSettings> {
 
     private final String[] answers;
     private final int[] answerIdx;
-    
+
     public ChoiceHinter(String[] answers, ChoiceHinterSettings settings) {
         super(settings);
         this.answers = answers;
         this.answerIdx = new int[answers.length];
-        
-        boolean[] used = new boolean[this.answers.length];
-        Arrays.fill(used, false);
-        Random r = new Random();
-        for (int i = 0; i < this.answers.length; i++) {
-            int idx;
-            do {
-                idx = r.nextInt(this.answers.length);
-            } while (used[idx]);
-            used[idx] = true;
-            this.answerIdx[i] = idx;
+        for (int i = 0; i < this.answerIdx.length; i++) {
+            this.answerIdx[i] = i;
         }
+        Collections.shuffle(Arrays.asList(this.answerIdx));
     }
-    
+
     @Override
-    public void nextHint() {        
+    public void nextHint() {
         if (this.countVisibleAnswers() > this.getSettings().minimum) {
             Random r = new Random();
             int idx;
@@ -41,7 +34,7 @@ public class ChoiceHinter extends DefaultHinter<ChoiceHinterSettings> {
     @Override
     public String getHint() {
         int count = this.countVisibleAnswers();
-        
+
         StringBuilder choices = new StringBuilder();
         int offset = 0;
         for (int i : this.answerIdx) {
@@ -65,5 +58,5 @@ public class ChoiceHinter extends DefaultHinter<ChoiceHinterSettings> {
         }
         return count;
     }
-    
+
 }

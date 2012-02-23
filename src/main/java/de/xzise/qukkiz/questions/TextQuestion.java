@@ -1,5 +1,6 @@
 package de.xzise.qukkiz.questions;
 
+import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.hinter.WordHinter;
 import de.xzise.qukkiz.questioner.FirstComeQuestioner;
@@ -7,34 +8,36 @@ import de.xzise.qukkiz.questioner.Questioner;
 
 public class TextQuestion extends Question {
 
-    public final String[] answers;
-    
+    public final AliasedAnswer answer;
+
     public TextQuestion(String question, QukkizSettings settings, String... answers) {
-        super(question, settings);
-        this.answers = answers;
+        this(question, settings, answers, new String[0]);
     }
-    
+
+    public TextQuestion(String question, QukkizSettings settings, String[] answers, String[] alternatives) {
+        super(question, settings);
+        this.answer = new AliasedAnswer(answers, alternatives);
+    }
+
     @Override
     public Integer testAnswer(String answer) {
-        for (String allowedAnswer : this.answers) {
-            if (answer.equalsIgnoreCase(allowedAnswer)) {
-                return 0;
-            }
-        }
-        return null;
+        return Question.parseAnswerTest(this.answer.check(answer));
     }
 
     @Override
     public String getAnswer() {
-        StringBuilder result = new StringBuilder(this.answers[0]);
-        for (int i = 1; i < this.answers.length; i++) {
-            result.append(", " + this.answers[i]);
+        StringBuilder result = new StringBuilder(this.answer.visibleAnswers[0]);
+        for (int i = 1; i < this.answer.visibleAnswers.length; i++) {
+            result.append(", " + this.answer.visibleAnswers[i]);
+        }
+        for (int i = 1; i < this.answer.aliases.length; i++) {
+            result.append(", " + this.answer.aliases[i]);
         }
         return result.toString();
     }
 
     @Override
-    public Questioner createHinter() {
-        return new FirstComeQuestioner(new WordHinter(this.answers[0], this.settings.wordHinter), this);
+    public Questioner createQuestioner() {
+        return new FirstComeQuestioner(new WordHinter(MinecraftUtil.getRandom(this.answer.visibleAnswers), this.settings.wordHinter), this);
     }
 }

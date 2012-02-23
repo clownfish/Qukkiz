@@ -1,7 +1,5 @@
 package de.xzise.qukkiz.questions;
 
-import java.util.Arrays;
-
 import de.xzise.qukkiz.QukkizSettings;
 import de.xzise.qukkiz.hinter.ChoiceHinter;
 import de.xzise.qukkiz.questioner.BestGuessQuestioner;
@@ -9,29 +7,22 @@ import de.xzise.qukkiz.questioner.Questioner;
 
 public class MultipleChoiceQuestion extends Question {
 
-    private final String[] answers;
+    private final AliasedAnswer[] answers;
 
-    public MultipleChoiceQuestion(String question, QukkizSettings settings, String... answers) {
+    public MultipleChoiceQuestion(String question, QukkizSettings settings, AliasedAnswer... answers) {
         super(question, settings);
         this.answers = answers;
     }
 
-    public static MultipleChoiceQuestion create(String[] segments, QukkizSettings settings) {
-        int offset = 0;
-        // Ignore first element
-        if (segments[0].equalsIgnoreCase("multiple choice")) {
-            offset++;
-        }
-        String question = segments[offset];
-        String[] answers = Arrays.copyOfRange(segments, offset + 1, segments.length);
-        return new MultipleChoiceQuestion(question, settings, answers);
+    public MultipleChoiceQuestion(String question, QukkizSettings settings, String... answers) {
+        this(question, settings, AliasedAnswer.createArray(answers));
     }
 
     @Override
     public Integer testAnswer(String answer) {
         Integer result = 0;
         for (int i = 0; i < this.answers.length; i++) {
-            if (this.answers[i].equalsIgnoreCase(answer)) {
+            if (this.answers[i].check(answer)) {
                 return result;
             }
             result = Integer.MAX_VALUE;
@@ -40,13 +31,13 @@ public class MultipleChoiceQuestion extends Question {
     }
 
     @Override
-    public Questioner createHinter() {
-        return new BestGuessQuestioner(new ChoiceHinter(this.answers, this.settings.choiceHinter), this, false);
+    public Questioner createQuestioner() {
+        return new BestGuessQuestioner(new ChoiceHinter(AliasedAnswer.getVisibleAnswers(answers), this.settings.choiceHinter), this, false);
     }
 
     @Override
     public String getAnswer() {
-        return this.answers[0];
+        return this.answers[0].visibleAnswers[0];
     }
 
 }

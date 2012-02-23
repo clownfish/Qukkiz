@@ -51,7 +51,7 @@ public class ScrambleQuestion implements QuestionInterface {
     }
 
     @Override
-    public Questioner createHinter() {
+    public Questioner createQuestioner() {
         this.scrambled = scramble(this.word.toLowerCase());
         return new FirstComeQuestioner(new WordHinter(this.word, this.settings.wordHinter), this);
     }
@@ -63,5 +63,9 @@ public class ScrambleQuestion implements QuestionInterface {
         }
         return QUESTION + this.scrambled;
     }
-    
+
+    @Override
+    public int getMaximumHints() {
+        return -1;
+    }
 }

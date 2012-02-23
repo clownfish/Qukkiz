@@ -1,5 +1,8 @@
 package de.xzise.qukkiz.questioner;
 
+import java.util.List;
+
+import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.questions.Question;
@@ -35,13 +38,13 @@ public class FirstComeQuestioner implements Questioner {
         if (this.correctAnswer == null) {
             return AnswerResult.INVALID;
         } else {
-            return AnswerResult.CORRECT;
+            return AnswerResult.FINISHED;
         }
     }
 
     @Override
-    public Answer getBestAnswer() {
-        return this.correctAnswer;
+    public List<Answer> getBestAnswers() {
+        return MinecraftUtil.getOneElementList(this.correctAnswer);
     }
 
 }

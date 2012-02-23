@@ -52,7 +52,7 @@ public class WordHinter extends DefaultHinter<WordHinterSettings> {
                 this.hint[replace] = this.hintResult.charAt(replace);
                 newChars--;
             }
-        }       
+        }
     }
 
     @Override

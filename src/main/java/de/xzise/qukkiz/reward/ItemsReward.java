@@ -7,17 +7,15 @@ import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.reward.ItemsRewardSettings.ItemData;
 
-public class ItemsReward implements Reward<ItemsRewardSettings> {
-    
-    private ItemsRewardSettings settings;
-    
+public class ItemsReward extends DefaultReward<ItemsRewardSettings> {
+
     public ItemsReward(ItemsRewardSettings settings) {
-        this.setSettings(settings);
+        super(settings);
     }
 
     @Override
     public void reward(Answer answer) {
-        ItemData data = MinecraftUtil.getRandom(this.settings.items);
+        ItemData data = MinecraftUtil.getRandom(this.getSettings().items);
         if (data != null) {
             ItemStack stack = data.create(1);
             if (answer.player.getInventory().addItem(stack).isEmpty()) {
@@ -26,11 +24,6 @@ public class ItemsReward implements Reward<ItemsRewardSettings> {
                 answer.player.sendMessage(ChatColor.WHITE + "You have been awarded a " + ChatColor.GREEN + "random" + ChatColor.WHITE + " item, but " + ChatColor.GREEN + "no empty" + ChatColor.WHITE + " slot!");
             }
         }
-    }
-
-    @Override
-    public void setSettings(ItemsRewardSettings settings) {
-        this.settings = settings;
     }
 
 }

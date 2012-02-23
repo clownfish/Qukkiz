@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.bukkit.entity.Player;
 
-import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.questions.QuestionInterface;
@@ -42,7 +41,7 @@ public class BestGuessQuestioner implements Questioner {
         if (delta != null) {
             this.answers.put(answer.player, answer);
             if (delta == 0 && this.cancelIfCorrect) {
-                return AnswerResult.CORRECT;
+                return AnswerResult.FINISHED;
             }
             return AnswerResult.VALID;
         } else {
@@ -51,7 +50,7 @@ public class BestGuessQuestioner implements Questioner {
     }
 
     @Override
-    public Answer getBestAnswer() {
+    public List<Answer> getBestAnswers() {
         List<Answer> possibleAnswers = new ArrayList<Answer>(this.answers.size());
         int bestDelta = 0;
         for (Answer answer : this.answers.values()) {
@@ -75,7 +74,7 @@ public class BestGuessQuestioner implements Questioner {
                 }
             }
         }
-        return MinecraftUtil.getRandom(possibleAnswers);
+        return possibleAnswers;
     }
 
 }

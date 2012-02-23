@@ -42,15 +42,18 @@ public class LoadCommand extends CommonHelpableSubCommand {
             } else {
                 sender.sendMessage(ChatColor.RED + "You have no permission to reload the questions.");
             }
-        } else {
+            return true;
+        } else if (parameters.length == 2) {
             if (Trivia.wrapper.permission(sender, PermissionTypes.ADMIN_LOAD_ADD)) {
                 //TODO: Concat other parameters
-                this.plugin.loadQuestions(new File(this.plugin.getDataFolder(), parameters[2]), sender);
+                this.plugin.loadQuestions(new File(this.plugin.getDataFolder(), parameters[1]), sender);
             } else {
                 sender.sendMessage(ChatColor.RED + "You have no permission to add a questionsfile.");
             }
-        } 
-        return true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

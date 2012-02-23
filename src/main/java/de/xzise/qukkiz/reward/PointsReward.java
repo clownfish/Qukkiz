@@ -23,7 +23,7 @@ public class PointsReward extends DefaultReward<PointsRewardSettings> {
 
     @Override
     public void reward(Answer answer) {
-        int points = Math.max(0, this.getSettings().start - (answer.hint * this.getSettings().decrease));
+        final int points = this.getSettings().getIntPositiveValue(answer.hint);
         int total = points;
 
         try {

@@ -18,4 +18,8 @@ public abstract class DefaultHinter<Settings extends HinterSettings> implements 
         this.settings = settings;
     }
 
+    @Override
+    public int getMaximumHints() {
+        return -1;
+    }
 }

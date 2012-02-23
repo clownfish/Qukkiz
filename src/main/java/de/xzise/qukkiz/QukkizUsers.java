@@ -102,11 +102,11 @@ public class QukkizUsers {
     }
 
     public boolean toogleSender(CommandSender sender) {
-        return MinecraftUtil.toogleEntry(sender, this.active);
+        return MinecraftUtil.toggleEntry(sender, this.active);
     }
 
     public boolean toogleStorage(Player player) {
-        return MinecraftUtil.toogleEntry(player.getName(), this.stored);
+        return MinecraftUtil.toggleEntry(player.getName(), this.stored);
     }
 
     public void sendMessage(String... message) {

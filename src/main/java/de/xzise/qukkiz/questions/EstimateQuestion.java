@@ -1,24 +1,28 @@
 package de.xzise.qukkiz.questions;
 
+import java.text.DecimalFormat;
+
 import de.xzise.qukkiz.QukkizSettings;
-import de.xzise.qukkiz.hinter.IntHinter;
+import de.xzise.qukkiz.hinter.NumberHinter;
 import de.xzise.qukkiz.questioner.BestGuessQuestioner;
 import de.xzise.qukkiz.questioner.Questioner;
 
 public class EstimateQuestion extends Question {
 
-    private final int answer;
-    
-    public EstimateQuestion(String question, QukkizSettings settings, int answer) {
+    private final double answer;
+    private final DecimalFormat format;
+
+    public EstimateQuestion(final String question, final QukkizSettings settings, final double answer, final DecimalFormat format) {
         super(question, settings);
         this.answer = answer;
+        this.format = format;
     }
 
     @Override
     public Integer testAnswer(String answer) {
         try {
-            int answerInt = Integer.parseInt(answer);            
-            return Math.abs(this.answer - answerInt);
+            double answerDouble = Double.parseDouble(answer);
+            return Math.abs((int) Math.round(this.answer - answerDouble));
         } catch (NumberFormatException nfe) {
             return null;
         }
@@ -26,12 +30,12 @@ public class EstimateQuestion extends Question {
 
     @Override
     public String getAnswer() {
-        return Integer.toString(answer);
+        return Double.toString(answer);
     }
 
     @Override
-    public Questioner createHinter() {
-        return new BestGuessQuestioner(new IntHinter(this.answer, this.settings.intHinter), this, true);
+    public Questioner createQuestioner() {
+        return new BestGuessQuestioner(new NumberHinter(this.answer, this.settings.intHinter, this.format), this, true);
     }
 
 }

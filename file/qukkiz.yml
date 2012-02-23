@@ -1,0 +1,38 @@
+rewards:
+  points:
+    start: 10
+    decrease: 2
+  items:
+    list: [87, 88, 89, 19, 21]
+#    list: [351m0, '285d0.25']
+  coins:
+    start: 10
+    decrease: 3
+questions:
+  files: [ ]
+  hints:
+    count: 3
+    delay: 15
+    word:
+      letters-per-hint: 8
+      minimum-masked: 2
+    number:
+      start: 0.2
+      decrease: 0.05
+    choice:
+      minimum: 2
+  delay: 5
+  reveal: true
+  answer:
+    mode: 'both'
+start:
+  onEnable: true
+  optIn: true
+ranking:
+  database: 'trivia.db'
+economy:
+  base: ''
+  plugin: ''
+permissions:
+  plugin: ''
+

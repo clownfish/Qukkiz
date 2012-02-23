@@ -6,8 +6,8 @@ import java.util.List;
 import nl.blaatz0r.Trivia.Trivia;
 
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.config.ConfigurationNode;
 
 import de.xzise.MinecraftUtil;
 
@@ -36,8 +36,8 @@ public class ItemsRewardSettings extends RewardSettings {
     }
 
     @Override
-    protected void setValues(ConfigurationNode node) {
-        List<String> items = node.getStringList("list", new ArrayList<String>(0));
+    protected void setValues(ConfigurationSection node) {
+        List<String> items = node.getStringList("list");
         this.items = new ArrayList<ItemsRewardSettings.ItemData>(items.size());
         for (String string : items) {
             String materialIdString = null;

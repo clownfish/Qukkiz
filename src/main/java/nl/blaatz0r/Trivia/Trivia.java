@@ -1,34 +1,22 @@
 package nl.blaatz0r.Trivia;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.player.PlayerListener;
-import org.bukkit.event.server.PluginDisableEvent;
-import org.bukkit.event.server.PluginEnableEvent;
-import org.bukkit.event.server.ServerListener;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.PluginManager;
 
 import de.xzise.MinecraftUtil;
 import de.xzise.NullaryCommandSender;
@@ -39,17 +27,16 @@ import de.xzise.qukkiz.QukkizSettings.AnswerMode;
 import de.xzise.qukkiz.QukkizUsers;
 import de.xzise.qukkiz.commands.CommandMap;
 import de.xzise.qukkiz.hinter.Answer;
+import de.xzise.qukkiz.parser.QuestionParser;
+import de.xzise.qukkiz.parser.TriviaParser;
 import de.xzise.qukkiz.questioner.Questioner;
-import de.xzise.qukkiz.questions.EstimateQuestion;
-import de.xzise.qukkiz.questions.MultipleChoiceQuestion;
 import de.xzise.qukkiz.questions.QuestionInterface;
-import de.xzise.qukkiz.questions.ScrambleQuestion;
-import de.xzise.qukkiz.questions.TextQuestion;
 import de.xzise.qukkiz.reward.CoinsReward;
 import de.xzise.qukkiz.reward.ItemsReward;
 import de.xzise.qukkiz.reward.PointsReward;
 import de.xzise.qukkiz.reward.Reward;
 import de.xzise.qukkiz.reward.RewardSettings;
+import de.xzise.wrappers.WrapperServerListener;
 import de.xzise.wrappers.economy.EconomyHandler;
 import de.xzise.wrappers.permissions.PermissionsHandler;
 
@@ -84,9 +71,7 @@ public class Trivia extends JavaPlugin {
     private QukkizUsers users;
     private List<Reward<? extends RewardSettings>> rewards;
     private QukkizSettings settings;
-    private Timer timer;
-    private TimerTask task;
-
+    private QuestionParser questionParser;
     private Map<Player, Answer> answers = new HashMap<Player, Answer>();
 
     private CoinsReward coinReward;
@@ -96,10 +81,34 @@ public class Trivia extends JavaPlugin {
     public static PermissionsHandler wrapper;
     public static XLogger logger;
 
+    private boolean enableCanceled;
+
     // DEFAULT PLUGIN FUNCTIONS
 
+    private void disable(String message) {
+        this.enableCanceled = true;
+        this.getServer().getLogger().severe("[Qukkiz] " + message);
+        this.getServer().getPluginManager().disablePlugin(this);
+    }
+
     public void onEnable() {
+        try {
+            if (MinecraftUtil.needUpdate(1, 3)) {
+                this.disable("You need to update Bukkit Plugin Utilities to at least 1.3.0!");
+                return;
+            }
+        } catch (NoSuchMethodError e) {
+            this.disable("You need to update Bukkit Plugin Utilities to at least 1.3.0!");
+            return;
+        } catch (NoClassDefFoundError e) {
+            this.disable("No Bukkit Plugin Utilities found!");
+            return;
+        }
         logger = new XLogger(this);
+
+        if (!MinecraftUtil.OFFICAL) {
+            logger.warning("You are using an inoffical version of Bukkit Plugin Utilities.");
+        }
 
         MinecraftUtil.register(this.getServer().getPluginManager(), logger, PermissionTypes.values());
 
@@ -116,44 +125,26 @@ public class Trivia extends JavaPlugin {
         this.commands = new CommandMap(this, this.settings);
         this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"), this.getServer());
         this.users.readFile();
+        this.questionParser = new TriviaParser(this.settings, logger);
 
         this.db = new Database();
         this.db.connect(this.settings.database);
         this.db.init();
 
         // React on plugin enable/disable
-        ServerListener serverListener = new ServerListener() {
-            @Override
-            public void onPluginEnable(PluginEnableEvent event) {
-                Trivia.this.permissionsHandler.load(event.getPlugin());
-                Trivia.this.economyHandler.load(event.getPlugin());
-            }
-
-            @Override
-            public void onPluginDisable(PluginDisableEvent event) {
-                Trivia.this.permissionsHandler.unload(event.getPlugin());
-                Trivia.this.economyHandler.unload(event.getPlugin());
-            }
-        };
+        WrapperServerListener.createAndRegisterEvents(this, this.permissionsHandler, this.economyHandler);
 
         // Test all plugins once!
         this.permissionsHandler.load();
         this.economyHandler.load();
 
-        PlayerListener playerListener = new TriviaPlayerListener(this, this.users);
-
         // Register our events
-        PluginManager pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Low, this);
-        pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Priority.Low, this);
-        pm.registerEvent(Event.Type.PLAYER_CHAT, playerListener, Priority.Low, this);
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Low, this);
-        pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Low, this);
+        this.getServer().getPluginManager().registerEvents(new TriviaPlayerListener(this, this.users), this);
 
         if (this.settings.startOnEnable) {
             this.startTrivia();
         }
-        logger.enableMsg();
+        enableCanceled = true;
     }
 
     public QukkizUsers getUsers() {
@@ -173,12 +164,6 @@ public class Trivia extends JavaPlugin {
         this.loadQuestions();
 
         if (questions.size() != 0) {
-            // Start a new timer
-            if (this.timer != null) {
-                this.timer.cancel();
-            }
-            this.timer = new Timer();
-
             voted = new ArrayList<CommandSender>();
             startTime = new Date().getTime();
             hints = 0;
@@ -212,9 +197,9 @@ public class Trivia extends JavaPlugin {
     }
 
     public void onDisable() {
-        this.stopTrivia();
-
-        Trivia.logger.info(name + " " + version + " disabled");
+        if (!enableCanceled) {
+            this.stopTrivia();
+        }
     }
 
     public void stopTrivia() {
@@ -225,17 +210,13 @@ public class Trivia extends JavaPlugin {
         canAnswer = false;
         triviaRunning = false;
         this.users.stop();
-
-        if (this.timer != null) {
-            this.timer.cancel();
-        }
+        this.getServer().getScheduler().cancelTasks(this);
     }
 
     // TRIVIA FUNCTIONS
 
-    private void scheduleTask(TimerTask task, int delay) {
-        this.task = task;
-        this.timer.schedule(task, delay);
+    private void scheduleTask(Runnable task, int delay) {
+        this.getServer().getScheduler().scheduleSyncDelayedTask(this, task, delay * 20);
     }
 
     /**
@@ -244,19 +225,17 @@ public class Trivia extends JavaPlugin {
      */
     public void nextQuestion() {
         this.stopQuestion();
-        this.scheduleTask(new TimerTask() {
+        this.scheduleTask(new Runnable() {
 
             @Override
             public void run() {
                 Trivia.this.startQuestion();
             }
-        }, this.settings.questionsDelay * 1000);
+        }, this.settings.questionsDelay);
     }
 
     public void stopQuestion() {
-        if (this.task != null) {
-            this.task.cancel();
-        }
+        this.getServer().getScheduler().cancelTasks(this);
         this.canAnswer = false;
         if (this.voted != null) {
             this.voted.clear();
@@ -270,17 +249,20 @@ public class Trivia extends JavaPlugin {
         this.startTime = new Date().getTime();
         this.readQuestion();
         this.sendQuestion();
-        this.startHintTimer();
+        this.startHintTimer(true);
     }
 
-    private void startHintTimer() {
-        this.scheduleTask(new TimerTask() {
+    private void startHintTimer(boolean stopTimers) {
+        if (stopTimers) {
+            this.getServer().getScheduler().cancelTasks(this);
+        }
+        this.scheduleTask(new Runnable() {
 
             @Override
             public void run() {
                 Trivia.this.updateHint();
             }
-        }, this.settings.hintDelay * 1000);
+        }, this.settings.hintDelay);
     }
 
     /**
@@ -289,20 +271,25 @@ public class Trivia extends JavaPlugin {
      * long.
      */
     public void updateHint() {
-        if (this.hints == this.settings.hintCount) {
+        int hintCount = this.questioner.getQuestion().getMaximumHints();
+        if (hintCount < 0) {
+            hintCount = this.questioner.getHinter().getMaximumHints();
+        }
+        if (hintCount < 0) {
+            hintCount = this.settings.hintCount;
+        }
+        if (this.hints >= hintCount) {
             if (this.canAnswer) {
                 this.proposeWinner();
             }
         } else {
-            if (this.task != null) {
-                this.task.cancel();
-            }
+            this.getServer().getScheduler().cancelTasks(this);
             this.hints++;
             this.questioner.getHinter().nextHint();
 
             this.sendQuestion();
 
-            this.startHintTimer();
+            this.startHintTimer(false);
         }
     }
 
@@ -351,13 +338,7 @@ public class Trivia extends JavaPlugin {
 
     public void loadQuestions(File file, CommandSender sender) {
         if (file.exists() && file.isFile()) {
-            List<String> q = new ArrayList<String>();
-            try {
-                q.addAll(this.readLines(file));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            this.parseTriviaQuestions(q, this.questions);
+            this.questions.addAll(this.questionParser.getQuestions(file));
             sender.sendMessage("Loaded questions from " + file.getName());
             Trivia.logger.info("Loaded questions from " + file.getName());
         } else {
@@ -365,84 +346,15 @@ public class Trivia extends JavaPlugin {
         }
     }
 
-    public List<QuestionInterface> parseTriviaQuestions(List<String> triviaQuestions) {
-        List<QuestionInterface> result = new ArrayList<QuestionInterface>(triviaQuestions.size());
-
-        for (String string : triviaQuestions) {
-            if (!string.isEmpty()) {
-                int comment = string.indexOf('#');
-                // Cut off commentary
-                if (comment > 0) {
-                    string = string.substring(0, comment);
-                } else if (comment == 0) {
-                    string = "";
-                }
-                if (!string.matches("\\s*")) {
-                    String[] segments = string.split("\\*");
-                    if (segments.length > 1) {
-                        if (segments[0].equalsIgnoreCase("scramble")) {
-                            if (segments.length == 2) {
-                                result.add(new ScrambleQuestion(segments[1], this.settings));
-                            } else {
-                                Trivia.logger.warning("Bad format in scramble question: " + string);
-                            }
-                        } else if (segments[0].equalsIgnoreCase("multiple choice")) {
-                            if (segments.length > 3) {
-                                result.add(MultipleChoiceQuestion.create(segments, this.settings));
-                            } else {
-                                Trivia.logger.warning("Bad format in multiple choice question: " + string);
-                            }
-                        } else if (segments[0].equalsIgnoreCase("estimate")) {
-                            if (segments.length == 3) {
-                                try {
-                                    result.add(new EstimateQuestion(segments[1], this.settings, Integer.parseInt(segments[2])));
-                                } catch (NumberFormatException nfe) {
-                                    Trivia.logger.warning("Bad format in estimate question (unable to parse to int): " + string);
-                                }
-                            } else {
-                                Trivia.logger.warning("Bad format in estimate question: " + string);
-                            }
-                        } else {
-                            result.add(new TextQuestion(segments[0], this.settings, Arrays.copyOfRange(segments, 1, segments.length)));
-                        }
-                    } else {
-                        Trivia.logger.warning("Bad format in question: " + string);
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    public void parseTriviaQuestions(List<String> triviaQuestions, List<QuestionInterface> questions) {
-        questions.addAll(parseTriviaQuestions(triviaQuestions));
-    }
-
     /**
-     * Reads a question from a file and updates question and answer.
+     * Selects a random question and activate it.
      */
     public void readQuestion() {
-        this.questioner = MinecraftUtil.getRandom(this.questions).createHinter();
+        this.questioner = MinecraftUtil.getRandom(this.questions).createQuestioner();
     }
 
     public boolean triviaEnabled(CommandSender p) {
         return this.users.isPlaying(p);
-    }
-
-    public List<String> readLines(File f) throws IOException {
-        List<String> lines = new ArrayList<String>();
-        FileReader fileReader = new FileReader(f);
-        try {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
-                lines.add(line);
-            }
-        } finally {
-            fileReader.close();
-        }
-        return lines;
     }
 
     public boolean permission(CommandSender sender, PermissionTypes defaultPermission, PermissionTypes adminPermission) {
@@ -540,9 +452,13 @@ public class Trivia extends JavaPlugin {
 
     public boolean answerQuestion(String answer, Player player, boolean printWrongAnswer) {
         if (this.users.isPlaying(player) && this.canAnswer) {
-            switch (this.questioner.putAnswer(new Answer(new Date().getTime() - this.startTime, this.hints, answer, player))) {
-            case CORRECT:
+            Answer answerObject = new Answer(new Date().getTime() - this.startTime, this.hints, answer, player);
+            switch (this.questioner.putAnswer(answerObject)) {
+            case FINISHED:
                 this.proposeWinner();
+                return true;
+            case NOT_FINISHED:
+                this.proposeAnswer(answerObject);
                 return true;
             case VALID:
                 player.sendMessage("Qukkiz recognized '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' as your answer.");
@@ -567,25 +483,41 @@ public class Trivia extends JavaPlugin {
         return this.settings.answerMode == AnswerMode.CHAT || this.settings.answerMode == AnswerMode.BOTH;
     }
 
-    private void proposeWinner(Answer answer) {
-        this.canAnswer = false;
+    private void proposeWinner() {
+        List<Answer> a = this.questioner.getBestAnswers();
+        if (MinecraftUtil.isSet(a)) {
+            this.canAnswer = false;
 
-        double time = Math.round(answer.time / 10) / 100.0;
+            if (a.size() == 1) {
+                double time = Math.round(a.get(0).time / 10) / 100.0;
 
-        this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
-        this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());
+                this.users.sendMessage(ChatColor.DARK_GREEN + MinecraftUtil.getRandom(grats) + ChatColor.GREEN + a.get(0).player.getDisplayName() + ChatColor.DARK_GREEN + " got the answer in " + ChatColor.GREEN + String.valueOf(time) + ChatColor.DARK_GREEN + " seconds!");
+            } else {
+                StringBuilder proposeBuilder = new StringBuilder(ChatColor.DARK_GREEN.toString()).append(MinecraftUtil.getRandom(grats)).append(ChatColor.GREEN + ": ");
+                for (Iterator<Answer> answerIterator = a.iterator();answerIterator.hasNext();) {
+                    Answer answer = answerIterator.next();
+                    double time = Math.round(answer.time / 10) / 100.0;
+                    proposeBuilder.append(answer.player.getDisplayName()).append(ChatColor.DARK_GREEN + " (" + ChatColor.GREEN).append(time).append(ChatColor.DARK_GREEN + "s )");
+                    if (answerIterator.hasNext()) {
+                        proposeBuilder.append(", " + ChatColor.GREEN);
+                    }
+                }
+                this.users.sendMessage(proposeBuilder.toString());
+            }
+            this.users.sendMessage(ChatColor.DARK_GREEN + "The answer was " + ChatColor.GREEN + this.questioner.getQuestion().getAnswer());
 
-        this.reward(answer);
-        this.nextQuestion();
+            for (Answer answer : a) {
+                this.reward(answer);
+            }
+            this.nextQuestion();
+        } else {
+            this.noAnswer();
+        }
     }
 
-    private void proposeWinner() {
-        Answer a = this.questioner.getBestAnswer();
-        if (a == null) {
-            this.noAnswer();
-        } else {
-            this.proposeWinner(a);
-        }
+    private void proposeAnswer(Answer answer) {
+        this.users.sendMessage("New answer from " + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.WHITE + ": " + ChatColor.GREEN + answer.answer, "The hint timer was reset.");
+        this.startHintTimer(true);
     }
 
     public void reward(Answer answer) {
