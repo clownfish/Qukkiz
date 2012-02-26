@@ -19,15 +19,15 @@ public class MultipleChoiceQuestion extends Question {
     }
 
     @Override
-    public Integer testAnswer(String answer) {
-        Integer result = 0;
+    public double testAnswer(String answer) {
+        double result = 0;
         for (int i = 0; i < this.answers.length; i++) {
             if (this.answers[i].check(answer)) {
                 return result;
             }
-            result = Integer.MAX_VALUE;
+            result = Double.POSITIVE_INFINITY;
         }
-        return null;
+        return Double.NaN;
     }
 
     @Override

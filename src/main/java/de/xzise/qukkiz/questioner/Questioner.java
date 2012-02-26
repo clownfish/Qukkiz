@@ -15,6 +15,8 @@ public interface Questioner {
         NOT_FINISHED,
         /** Possible answer but maybe not correct. */
         VALID,
+        /** Was valid but now not a valid answer anymore. */
+        INVALIDATED,
         /** Impossible answer. */
         INVALID;
     }

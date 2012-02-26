@@ -19,12 +19,12 @@ public class EstimateQuestion extends Question {
     }
 
     @Override
-    public Integer testAnswer(String answer) {
+    public double testAnswer(String answer) {
         try {
             double answerDouble = Double.parseDouble(answer);
-            return Math.abs((int) Math.round(this.answer - answerDouble));
+            return Math.abs(this.answer - answerDouble);
         } catch (NumberFormatException nfe) {
-            return null;
+            return Double.NaN;
         }
     }
 

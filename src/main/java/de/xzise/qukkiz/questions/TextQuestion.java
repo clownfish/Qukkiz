@@ -20,7 +20,7 @@ public class TextQuestion extends Question {
     }
 
     @Override
-    public Integer testAnswer(String answer) {
+    public double testAnswer(String answer) {
         return Question.parseAnswerTest(this.answer.check(answer));
     }
 

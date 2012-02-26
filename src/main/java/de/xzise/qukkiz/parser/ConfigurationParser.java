@@ -5,10 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -17,7 +17,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 import de.xzise.MinecraftUtil;
 import de.xzise.XLogger;
@@ -113,6 +112,17 @@ public class ConfigurationParser implements QuestionParser {
         }
     }
 
+    // Debug method
+    //@formatter:off
+//    private static String ListToString(final List<?> list) {
+//        if (list != null) {
+//            return Arrays.toString(list.toArray());
+//        } else {
+//            return null;
+//        }
+//    }
+    //@formatter:on
+
     private static class TextParser implements ConfigParser {
         @Override
         public String getName() {
@@ -123,18 +133,9 @@ public class ConfigurationParser implements QuestionParser {
         public QuestionInterface parse(final MemorySection section, final QukkizSettings settings) {
             final String question = section.getString("question");
             if (question != null) {
-                Set<String> answers = Sets.newHashSet();
-                for (Object answerObj : section.getList("answers")) {
-                    answers.add(answerObj.toString().toLowerCase());
-                }
-                Set<String> alternatives = Sets.newHashSet();
-                for (Object alternativeObj : section.getList("aliases")) {
-                    final String alternative = alternativeObj.toString().toLowerCase();
-                    if (!answers.contains(alternative)) {
-                        alternatives.add(alternative);
-                    }
-                }
-                return new TextQuestion(question, settings, answers.toArray(new String[0]), alternatives.toArray(new String[0]));
+                final List<String> answers = getStringList(section, "answers");
+                final List<String> aliases = getStringList(section, "aliases");
+                return new TextQuestion(question, settings, answers.toArray(new String[0]), aliases.toArray(new String[0]));
             } else {
                 return null;
             }
@@ -227,9 +228,9 @@ public class ConfigurationParser implements QuestionParser {
         final List<AliasedAnswer> answers = new ArrayList<AliasedAnswer>(answerSections.size());
         for (int i = 0; i < answerSections.size(); i++) {
             MemorySection s = answerSections.get(i);
-            if (s.isString("answer")) {
-                final List<String> visibleAnswers = getStringList(s, "answers");
-                final List<String> aliases = getStringList(s, "aliases");
+            final List<String> visibleAnswers = getStringList(s, "answers");
+            final List<String> aliases = getStringList(s, "aliases");
+            if (visibleAnswers.size() > 0) {
                 answers.add(new AliasedAnswer(visibleAnswers.toArray(new String[0]), aliases.toArray(new String[0])));
             }
         }

@@ -27,11 +27,11 @@ import de.xzise.qukkiz.QukkizSettings.AnswerMode;
 import de.xzise.qukkiz.QukkizUsers;
 import de.xzise.qukkiz.commands.CommandMap;
 import de.xzise.qukkiz.hinter.Answer;
-import de.xzise.qukkiz.parser.QuestionParser;
-import de.xzise.qukkiz.parser.TriviaParser;
+import de.xzise.qukkiz.parser.QuestionParsers;
 import de.xzise.qukkiz.questioner.Questioner;
 import de.xzise.qukkiz.questions.QuestionInterface;
 import de.xzise.qukkiz.reward.CoinsReward;
+import de.xzise.qukkiz.reward.ExperienceReward;
 import de.xzise.qukkiz.reward.ItemsReward;
 import de.xzise.qukkiz.reward.PointsReward;
 import de.xzise.qukkiz.reward.Reward;
@@ -71,7 +71,7 @@ public class Trivia extends JavaPlugin {
     private QukkizUsers users;
     private List<Reward<? extends RewardSettings>> rewards;
     private QukkizSettings settings;
-    private QuestionParser questionParser;
+    private QuestionParsers questionParsers;
     private Map<Player, Answer> answers = new HashMap<Player, Answer>();
 
     private CoinsReward coinReward;
@@ -125,7 +125,7 @@ public class Trivia extends JavaPlugin {
         this.commands = new CommandMap(this, this.settings);
         this.users = new QukkizUsers(new File(this.getDataFolder(), "stored-users.txt"), this.getServer());
         this.users.readFile();
-        this.questionParser = new TriviaParser(this.settings, logger);
+        this.questionParsers = new QuestionParsers(this.settings, logger);
 
         this.db = new Database();
         this.db.connect(this.settings.database);
@@ -181,6 +181,9 @@ public class Trivia extends JavaPlugin {
                 this.coinReward = new CoinsReward(this.settings.coinsReward);
                 this.coinReward.setEconomyHandler(this.economyHandler);
                 this.rewards.add(this.coinReward);
+            }
+            if (this.settings.experienceReward != null) {
+                this.rewards.add(new ExperienceReward(this.settings.experienceReward));
             }
 
             Trivia.logger.info("Qukkiz has started!");
@@ -338,7 +341,7 @@ public class Trivia extends JavaPlugin {
 
     public void loadQuestions(File file, CommandSender sender) {
         if (file.exists() && file.isFile()) {
-            this.questions.addAll(this.questionParser.getQuestions(file));
+            this.questions.addAll(this.questionParsers.getParserByFileExtension(file.getName()).getQuestions(file));
             sender.sendMessage("Loaded questions from " + file.getName());
             Trivia.logger.info("Loaded questions from " + file.getName());
         } else {
@@ -463,13 +466,21 @@ public class Trivia extends JavaPlugin {
             case VALID:
                 player.sendMessage("Qukkiz recognized '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' as your answer.");
                 return false;
+            case INVALIDATED:
+                if (printWrongAnswer) {
+                    player.sendMessage("The answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' is correct but was already mentioned. Sorry.");
+                }
+                return false;
             case INVALID:
                 if (printWrongAnswer) {
                     player.sendMessage("The answer '" + ChatColor.GREEN + answer + ChatColor.WHITE + "' is wrong. Sorry.");
                 }
                 return false;
+            default :
+                player.sendMessage(ChatColor.RED + "Recieved an unhandled AnswerResult in Qukkiz! Contact the server admin, as there is more information in the log.");
+                Trivia.logger.warning("Unhandled AnswerResult in Qukkiz!", new Exception());
+                return false;
             }
-            return false;
         } else {
             return false;
         }
@@ -516,8 +527,9 @@ public class Trivia extends JavaPlugin {
     }
 
     private void proposeAnswer(Answer answer) {
-        this.users.sendMessage("New answer from " + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.WHITE + ": " + ChatColor.GREEN + answer.answer, "The hint timer was reset.");
+        this.users.sendMessage("New answer from " + ChatColor.GREEN + answer.player.getDisplayName() + ChatColor.WHITE + " given and the hint timer was reset: " + ChatColor.GREEN + answer.answer);
         this.startHintTimer(true);
+        this.sendQuestion();
     }
 
     public void reward(Answer answer) {

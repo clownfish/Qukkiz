@@ -8,6 +8,9 @@ rewards:
   coins:
     start: 10
     decrease: 3
+#  experience:
+#    start: 0.04
+#    decrease: 0.01
 questions:
   files: [ ]
   hints:

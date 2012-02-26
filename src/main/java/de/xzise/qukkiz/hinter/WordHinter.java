@@ -4,19 +4,19 @@ import java.util.Random;
 import java.util.regex.Pattern;
 
 public class WordHinter extends DefaultHinter<WordHinterSettings> {
-    
+
     private static final Pattern REPLACE_PATTERN = Pattern.compile("[a-zA-Z0-9]");
 
     private char[] hint;
     private final int maskedCount;
     private final boolean[] masked;
     private final String hintResult;
-    
+
     public WordHinter(String hintResult, WordHinterSettings settings) {
         super(settings);
         this.hintResult = hintResult;
         this.masked = new boolean[this.hintResult.length()];
-        
+
         int maskedCount = 0;
         this.hint = REPLACE_PATTERN.matcher(this.hintResult).replaceAll("*").toCharArray();
         for (int i = 0; i < this.hint.length; i++) {
@@ -27,7 +27,7 @@ public class WordHinter extends DefaultHinter<WordHinterSettings> {
         }
         this.maskedCount = maskedCount;
     }
-    
+
     @Override
     public void nextHint() {
         // Now many new chars should be revealed?

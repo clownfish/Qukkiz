@@ -28,16 +28,16 @@ public abstract class Question implements QuestionInterface {
         return this.maximumHints;
     }
 
-    public static Integer parseAnswerTest(boolean bool) {
+    public static double parseAnswerTest(boolean bool) {
         if (bool) {
             return 0;
         } else {
-            return null;
+            return Double.NaN;
         }
     }
 
-    public static boolean parseAnswerTest(Integer integer) {
-        if (integer == null || integer != 0) {
+    public static boolean parseAnswerTest(double dbl) {
+        if (dbl == Double.NaN || dbl != 0.0) {
             return false;
         } else {
             return true;

@@ -19,18 +19,22 @@ public class ListQuestion extends Question {
     public ListQuestion(String question, QukkizSettings settings, AliasedAnswer... answers) {
         super(question, settings);
         this.answers = answers;
+        boolean firstElement = true;
         StringBuilder builder = new StringBuilder(ChatColor.GREEN.toString());
-        for (int i = 0; i < this.answers.length; i++) {
-            if (i > 0) {
-                builder.append(ChatColor.WHITE + ", " + ChatColor.GREEN);
+        for (AliasedAnswer aliasedAnswer : this.answers) {
+            for (String answer : aliasedAnswer.visibleAnswers) {
+                if (!firstElement) {
+                    builder.append(ChatColor.WHITE + ", " + ChatColor.GREEN);
+                }
+                builder.append(answer);
+                firstElement = false;
             }
-            builder.append(this.answers[i].visibleAnswers);
         }
         this.answerText = builder.append(ChatColor.WHITE).toString();
     }
 
     @Override
-    public Integer testAnswer(String answer) {
+    public double testAnswer(String answer) {
         for (AliasedAnswer aliasedAnswer : this.answers) {
            if (aliasedAnswer.check(answer)) {
                return Question.parseAnswerTest(true);

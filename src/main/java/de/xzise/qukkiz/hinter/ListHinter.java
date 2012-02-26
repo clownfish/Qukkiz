@@ -13,12 +13,18 @@ public class ListHinter extends DefaultHinter<ListHinterSettings> {
     private final AliasedAnswer[] answers;
     private final boolean[] visible;
     private final Random random = new Random();
+    private final int[] answerIdx;
 
     public ListHinter(AliasedAnswer[] answers, ListHinterSettings settings) {
         super(settings);
         Collections.shuffle(Arrays.asList(answers));
         this.answers = answers;
         this.visible = new boolean[answers.length];
+        this.answerIdx = new int[answers.length];
+        Random r = new Random();
+        for (int i = 0; i < answers.length; i++) {
+            this.answerIdx[i] = r.nextInt(answers[i].visibleAnswers.length);
+        }
         Arrays.fill(this.visible, false);
     }
 
@@ -65,7 +71,7 @@ public class ListHinter extends DefaultHinter<ListHinterSettings> {
                 builder.append(ChatColor.WHITE + ", " + ChatColor.GREEN);
             }
             if (this.visible[i]) {
-                builder.append(this.answers[i]);
+                builder.append(this.answers[i].visibleAnswers[this.answerIdx[i]]);
             } else {
                 builder.append("****");
             }
@@ -82,12 +88,12 @@ public class ListHinter extends DefaultHinter<ListHinterSettings> {
         }
     }
 
-    public boolean notHinted(String string) {
+    public Boolean isCorrect(String string) {
         for (int i = 0; i < this.answers.length; i++) {
             if (this.answers[i].check(string)) {
-                return this.visible[i];
+                return !this.visible[i];
             }
         }
-        return false;
+        return null;
     }
 }

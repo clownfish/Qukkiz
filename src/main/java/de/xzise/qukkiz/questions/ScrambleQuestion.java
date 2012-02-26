@@ -23,7 +23,7 @@ public class ScrambleQuestion implements QuestionInterface {
     }
 
     @Override
-    public Integer testAnswer(String answer) {
+    public double testAnswer(String answer) {
         return Question.parseAnswerTest(answer.equalsIgnoreCase(this.word));
     }
 

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.bukkit.entity.Player;
 
+import de.xzise.MinecraftUtil;
 import de.xzise.qukkiz.hinter.Answer;
 import de.xzise.qukkiz.hinter.Hinter;
 import de.xzise.qukkiz.questions.QuestionInterface;
@@ -37,10 +38,10 @@ public class BestGuessQuestioner implements Questioner {
 
     @Override
     public AnswerResult putAnswer(Answer answer) {
-        Integer delta = this.getQuestion().testAnswer(answer.answer);
-        if (delta != null) {
+        double delta = this.getQuestion().testAnswer(answer.answer);
+        if (delta != Double.NaN) {
             this.answers.put(answer.player, answer);
-            if (delta == 0 && this.cancelIfCorrect) {
+            if (MinecraftUtil.equals(delta, 0, 0.00000000000001) && this.cancelIfCorrect) {
                 return AnswerResult.FINISHED;
             }
             return AnswerResult.VALID;
@@ -52,11 +53,11 @@ public class BestGuessQuestioner implements Questioner {
     @Override
     public List<Answer> getBestAnswers() {
         List<Answer> possibleAnswers = new ArrayList<Answer>(this.answers.size());
-        int bestDelta = 0;
+        double bestDelta = 0;
         for (Answer answer : this.answers.values()) {
-            Integer delta = this.getQuestion().testAnswer(answer.answer);
+            double delta = this.getQuestion().testAnswer(answer.answer);
             // Answer has to be at least valid
-            if (delta != null && delta != Integer.MAX_VALUE && delta != Integer.MIN_VALUE) {
+            if (delta != Double.NaN && delta != Double.NEGATIVE_INFINITY && delta != Double.POSITIVE_INFINITY) {
                 if (possibleAnswers.size() == 0) {
                     possibleAnswers.add(answer);
                     bestDelta = Math.abs(delta);

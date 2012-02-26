@@ -16,6 +16,7 @@ import de.xzise.qukkiz.hinter.NumberHinterSettings;
 import de.xzise.qukkiz.hinter.ListHinterSettings;
 import de.xzise.qukkiz.hinter.WordHinterSettings;
 import de.xzise.qukkiz.reward.CoinsRewardSettings;
+import de.xzise.qukkiz.reward.ExperienceRewardSettings;
 import de.xzise.qukkiz.reward.ItemsRewardSettings;
 import de.xzise.qukkiz.reward.PointsRewardSettings;
 import de.xzise.qukkiz.reward.RewardSettings;
@@ -27,6 +28,7 @@ public class QukkizSettings {
     public CoinsRewardSettings coinsReward;
     public ItemsRewardSettings itemsReward;
     public PointsRewardSettings pointsReward;
+    public ExperienceRewardSettings experienceReward;
 
     public File[] questionfiles;
     public int questionsDelay;
@@ -92,6 +94,7 @@ public class QukkizSettings {
         this.pointsReward = RewardSettings.create(new PointsRewardSettings(), section);
         this.itemsReward = RewardSettings.create(new ItemsRewardSettings(), section);
         this.coinsReward = RewardSettings.create(new CoinsRewardSettings(), section);
+        this.experienceReward = RewardSettings.create(new ExperienceRewardSettings(), section);
 
         this.questionfiles = convert(config.getStringList("questions.files"), dataPath);
         this.questionsDelay = config.getInt("questions.delay", 5);

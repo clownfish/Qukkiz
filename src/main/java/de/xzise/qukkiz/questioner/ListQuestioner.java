@@ -33,16 +33,18 @@ public class ListQuestioner implements Questioner {
 
     @Override
     public AnswerResult putAnswer(Answer answer) {
-        //if (Question.parseAnswerTest(this.getQuestion().testAnswer(answer.answer))) {
-        if (this.hinter.notHinted(answer.answer)) {
+        final Boolean isCorrect = this.hinter.isCorrect(answer.answer);
+        // TODO: Add setting to define mode "first wrong answer stops"
+        if (isCorrect == null) {
+            return AnswerResult.INVALID;
+        } else if (isCorrect) {
             if (this.lastAnswer == null) {
                 this.lastAnswer = answer;
             }
             this.hinter.nextHint(answer.answer);
             return this.hinter.getInvisibleCount() > 0 ? AnswerResult.NOT_FINISHED : AnswerResult.FINISHED;
         } else {
-            // TODO: Add setting to define mode "first wrong answer stops"
-            return AnswerResult.INVALID;
+            return AnswerResult.INVALIDATED;
         }
     }
 
