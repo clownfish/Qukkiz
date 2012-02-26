@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -116,7 +115,7 @@ public class ConfigurationParser implements QuestionParser {
     //@formatter:off
 //    private static String ListToString(final List<?> list) {
 //        if (list != null) {
-//            return Arrays.toString(list.toArray());
+//            return java.util.Arrays.toString(list.toArray());
 //        } else {
 //            return null;
 //        }

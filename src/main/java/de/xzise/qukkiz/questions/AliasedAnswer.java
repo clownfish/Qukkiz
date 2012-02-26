@@ -1,7 +1,5 @@
 package de.xzise.qukkiz.questions;
 
-import java.util.Arrays;
-
 import de.xzise.EqualCheck;
 import de.xzise.MinecraftUtil;
 import de.xzise.collections.ArrayReferenceList;
