@@ -37,7 +37,7 @@ public class TriviaParser implements QuestionParser {
                 put("scramble", new ScrambleParser()).
                 put("text", DEFAULT).
                 put("estimate", new EstimateParser()).
-                put("multiplechoice", new MultipleChoiceParser()).
+                put("multiple choice", new MultipleChoiceParser()).
                 put("list", new ListParser()).
                 build();
     }
@@ -84,7 +84,7 @@ public class TriviaParser implements QuestionParser {
 
         @Override
         public QuestionInterface parse(String[] segments, QukkizSettings settings) throws TriviaQuestionParserException {
-            if (segments.length > 3) {
+            if (segments.length > 2) {
                 String question = segments[0];
                 String[] answers = Arrays.copyOfRange(segments, 1, segments.length);
                 return new MultipleChoiceQuestion(question, settings, answers);
@@ -138,7 +138,7 @@ public class TriviaParser implements QuestionParser {
 
         @Override
         public QuestionInterface parse(String[] segments, QukkizSettings settings) throws TriviaQuestionParserException {
-            if (segments.length > 2) {
+            if (segments.length >= 2) {
                 return new TextQuestion(segments[0], settings, Arrays.copyOfRange(segments, 1, segments.length));
             } else {
                 throw TriviaQuestionParserException.createNotEnoughtSections();
@@ -172,16 +172,19 @@ public class TriviaParser implements QuestionParser {
                         TriviaQuestionParser parser = PARSERS.get(segments[0].toLowerCase());
                         if (parser == null) {
                             parser = DEFAULT;
+                        } else {
+                            segments = Arrays.copyOfRange(segments, 1, segments.length);
                         }
                         QuestionInterface question = null;
                         boolean reported = false;
                         try {
-                            question = parser.parse(Arrays.copyOfRange(segments, 1, segments.length), this.settings);
+                            question = parser.parse(segments, this.settings);
                         } catch (TriviaQuestionParserException e) {
                             this.logger.warning("Bad format in question of type '" + parser.getName() + "' because of '" + e.getMessage() + "': " + string);
                             reported = true;
                         } catch (Exception e) {
                             this.logger.warning("Exception in parsing question of type '" + parser.getName() + "': " + string, e);
+                            reported = true;
                         }
                         if (question == null) {
                             if (!reported) {
